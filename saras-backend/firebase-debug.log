@@ -1,0 +1,20 @@
+[debug] [2026-05-16T12:32:35.774Z] ----------------------------------------------------------------------
+[debug] [2026-05-16T12:32:35.783Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Angga\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --project saras-platform-73839
+[debug] [2026-05-16T12:32:35.784Z] CLI Version:   15.18.0
+[debug] [2026-05-16T12:32:35.785Z] Platform:      win32
+[debug] [2026-05-16T12:32:35.785Z] Node Version:  v24.14.0
+[debug] [2026-05-16T12:32:35.786Z] Time:          Sat May 16 2026 19:32:35 GMT+0700 (Western Indonesia Time)
+[debug] [2026-05-16T12:32:35.786Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2026-05-16T12:32:39.549Z] Error: EBUSY: resource busy or locked, unlink 'C:\Users\Angga\Documents\Percodingan Duniawi\Saras\saras-backend\firebase-debug.log'
+    at Object.unlinkSync (node:fs:1931:11)
+    at process.<anonymous> (C:\Users\Angga\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js:44:16)
+    at process.emit (node:events:520:35)
+    at process.exit (node:internal/process/per_thread:236:15)
+    at Timeout._onTimeout (C:\Users\Angga\AppData\Roaming\npm\node_modules\firebase-tools\lib\errorOut.js:20:17)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+[error] 
+[error] Error: An unexpected error has occurred.
