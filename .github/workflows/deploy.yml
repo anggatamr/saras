@@ -1,0 +1,72 @@
+name: Deploy SARAS Platform
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'saras-backend/**'
+      - 'saras-frontend/**'
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'saras-backend/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker gcr.io
+
+      - name: Build and push Docker image
+        working-directory: ./saras-backend
+        run: |
+          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/saras-backend:${{ github.sha }}"
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Cloud Run
+        working-directory: ./saras-backend
+        run: |
+          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/saras-backend:${{ github.sha }}"
+          sed -i "s|gcr.io/\[PROJECT_ID\]/saras-backend:latest|$IMAGE_NAME|g" cloud-run-service.yaml
+          sed -i "s|\[PROJECT_ID\]|${{ secrets.GCP_PROJECT_ID }}|g" cloud-run-service.yaml
+          gcloud run services replace cloud-run-service.yaml --region asia-southeast2
+
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'saras-frontend/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel
+
+      - name: Pull Vercel Environment Information
+        working-directory: ./saras-frontend
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        working-directory: ./saras-frontend
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        working-directory: ./saras-frontend
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

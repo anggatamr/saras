@@ -1,0 +1,40 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: saras-backend
+  labels:
+    cloud.googleapis.com/location: asia-southeast2 # Jakarta
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '0'
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 80
+      containers:
+      - image: gcr.io/[PROJECT_ID]/saras-backend:latest
+        ports:
+        - name: http1
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        env:
+        - name: GIN_MODE
+          value: release
+        - name: GOOGLE_CLOUD_PROJECT
+          value: "[PROJECT_ID]"
+        # Pass secrets using Secret Manager
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-key
+              key: latest
+        - name: FIREBASE_AUTH_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              name: firebase-credentials
+              key: latest
