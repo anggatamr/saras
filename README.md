@@ -1,25 +1,30 @@
 <div align="center">
 
-# 🔬 SARAS
+<img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/shield-check.svg" width="120" height="120" alt="SARAS Logo" />
 
-### *Sistem Asisten Riset Akademik Statistika*
+# 🔬 SARAS (Sistem Asisten Riset Akademik Statistika)
+### *AI-Powered Research Integrity & Analytics Platform for Indonesian Academia*
 
-**AI-Powered Research Integrity & Analytics Platform for Indonesian Academia**
-
+[![Build Status](https://github.com/anggatamr/Saras/actions/workflows/ci.yml/badge.svg)](https://github.com/anggatamr/Saras/actions)
 [![Deploy Backend](https://img.shields.io/badge/Backend-Cloud%20Run-4285F4?logo=google-cloud&logoColor=white)](https://saras-api-407575564976.asia-southeast2.run.app)
 [![Deploy Frontend](https://img.shields.io/badge/Frontend-Firebase-FFCA28?logo=firebase&logoColor=black)](https://saras-platform-73839.web.app)
 [![Go](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[**Live Demo**](https://saras-platform-73839.web.app) · [**API Endpoint**](https://saras-api-407575564976.asia-southeast2.run.app/health) · [**Blueprint**](SARAS_Blueprint_JuaraVibeCoding2026.md)
+[**Live Demo**](https://saras-platform-73839.web.app) · [**API Endpoint**](https://saras-api-407575564976.asia-southeast2.run.app/health) · [**Architecture Blueprint**](SARAS_Blueprint_JuaraVibeCoding2026.md)
 
 ---
 
-*"Riset yang baik bukan tentang data yang sempurna.*
-*Tapi tentang kejujuran dalam menghadapi data apa adanya."*
+*"Riset yang baik bukan tentang data yang sempurna. Tapi tentang kejujuran dalam menghadapi data apa adanya."*
 
 </div>
+
+---
+
+## 🌟 Executive Summary
+
+SARAS is a state-of-the-art web application developed for **#JuaraVibeCoding 2026**. It aims to eradicate data manipulation among Indonesian undergraduate students by providing a complete, AI-assisted research ecosystem. By combining Google Gemini's narrative capabilities with high-performance statistical engines in Go, SARAS transforms the stressful thesis data processing phase into a transparent, guided, and verifiable experience.
 
 ---
 
@@ -322,20 +327,21 @@ SARAS addresses the academic integrity crisis affecting **1 million+ Indonesian 
 ## 🗺️ Roadmap
 
 - [x] Core architecture (Next.js + Go + Firebase)
-- [x] ARIA integrity analysis (Z-Score + Duplicates)
+- [x] ARIA integrity analysis (Missing data flagging, Shapiro-Wilk simulation)
 - [x] All 5 module UIs scaffolded
 - [x] Cloud Run backend deployment
 - [x] Firebase Hosting frontend deployment
 - [x] CI/CD pipeline (GitHub Actions)
-- [ ] Gemini AI narrative generation (BAB IV)
-- [ ] Firebase Auth with `.ac.id` gating
-- [ ] BPS WebAPI live integration
-- [ ] ATLAS multi-database literature search
-- [ ] D3.js Research Gap Map visualization
-- [ ] Mobile-responsive bottom navigation
-- [ ] One-click Word export
-- [ ] Indonesia choropleth map (NEXUS)
-- [ ] Confetti animation for high integrity scores
+- [x] Gemini AI narrative generation (BAB IV)
+- [x] Firebase Auth with `.ac.id` gating
+- [x] BPS WebAPI live integration (NEXUS)
+- [x] ATLAS multi-database literature search (OpenAlex)
+- [x] D3.js Research Gap Map visualization
+- [x] PDF Export / Research Integrity Report
+- [x] Mobile-responsive bottom navigation
+- [x] One-click Word export
+- [x] Indonesia choropleth map (NEXUS)
+- [x] Confetti animation for high integrity scores
 
 ---
 

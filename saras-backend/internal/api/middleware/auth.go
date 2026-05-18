@@ -38,8 +38,17 @@ func FirebaseAuth(fbApp *firebase.App) gin.HandlerFunc {
 		}
 
 		c.Set("uid", token.UID)
-		if email, ok := token.Claims["email"].(string); ok {
+		email := ""
+		if emailClaim, ok := token.Claims["email"].(string); ok {
+			email = emailClaim
 			c.Set("email", email)
+		}
+
+		if strings.Contains(c.Request.URL.Path, "/vera/") {
+			if !strings.HasSuffix(email, ".ac.id") && !strings.HasSuffix(email, ".edu") {
+				c.AbortWithStatusJSON(403, gin.H{"error": "Forbidden: Only academic emails (.ac.id/.edu) are allowed for VERA"})
+				return
+			}
 		}
 
 		c.Next()

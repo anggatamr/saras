@@ -4,10 +4,12 @@ import { useState } from "react"
 import { Topbar } from "@/components/layout/Topbar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, CheckCircle2, Award, Plus, Search, Filter } from "lucide-react"
+import { Users, CheckCircle2, Award, Plus, Search, Filter, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { useAuth } from "@/lib/auth"
 
 // Mock Surveys
 const mockSurveys = [
@@ -18,6 +20,7 @@ const mockSurveys = [
 
 export default function VeraPage() {
   const [activeTab, setActiveTab] = useState("marketplace")
+  const { user, isAcademicEmail, signInWithGoogle, logout, loading } = useAuth()
 
   return (
     <div className="flex h-full flex-col">
@@ -26,25 +29,45 @@ export default function VeraPage() {
       <main className="flex-1 overflow-auto p-6">
         <div className="mx-auto max-w-5xl space-y-6">
           
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 p-6 rounded-xl">
-            <div className="flex gap-4 items-center">
-              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border-4 border-green-200 shadow-sm">
-                <Users className="h-8 w-8 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl text-green-950">Status Anda: Terverifikasi</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="bg-white border-green-200 text-green-700">angga@unimed.ac.id</Badge>
-                  <Badge variant="outline" className="bg-white border-green-200 text-green-700"><CheckCircle2 className="w-3 h-3 mr-1" /> .ac.id Verified</Badge>
+          {loading ? (
+            <div className="flex justify-center py-10"><span className="text-muted-foreground">Memuat status verifikasi...</span></div>
+          ) : !user || !isAcademicEmail ? (
+            <Card className="border-dashed border-2 max-w-md mx-auto mt-10">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-red-50 p-4 mb-4">
+                  <AlertCircle className="h-10 w-10 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Akses Terbatas</h3>
+                <p className="text-muted-foreground mb-6">
+                  Fitur VERA eksklusif untuk civitas akademika. Silakan login menggunakan email kampus (.ac.id / .edu) Anda untuk berpartisipasi atau menyebarkan survei.
+                </p>
+                <Button onClick={signInWithGoogle} className="bg-green-600 hover:bg-green-700 w-full">
+                  Login dengan Email Akademik
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 p-6 rounded-xl">
+                <div className="flex gap-4 items-center">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border-4 border-green-200 shadow-sm">
+                    <Users className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl text-green-950">Status Anda: Terverifikasi</h3>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="outline" className="bg-white border-green-200 text-green-700">{user.email}</Badge>
+                      <Badge variant="outline" className="bg-white border-green-200 text-green-700"><CheckCircle2 className="w-3 h-3 mr-1" /> .ac.id Verified</Badge>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground ml-2" onClick={logout}>Keluar</Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-green-100 min-w-[150px]">
+                  <span className="text-sm font-semibold text-muted-foreground mb-1 uppercase tracking-wider flex items-center"><Award className="w-4 h-4 mr-1 text-amber-500" /> Saldo Poin</span>
+                  <span className="text-3xl font-bold text-green-700">450</span>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-green-100 min-w-[150px]">
-              <span className="text-sm font-semibold text-muted-foreground mb-1 uppercase tracking-wider flex items-center"><Award className="w-4 h-4 mr-1 text-amber-500" /> Saldo Poin</span>
-              <span className="text-3xl font-bold text-green-700">450</span>
-            </div>
-          </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -126,6 +149,8 @@ export default function VeraPage() {
               </Card>
             </TabsContent>
           </Tabs>
+            </>
+          )}
           
         </div>
       </main>

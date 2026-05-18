@@ -5,6 +5,7 @@ import (
     "github.com/angga/saras-backend/internal/api/handlers"
     "github.com/angga/saras-backend/internal/api/middleware"
     "github.com/angga/saras-backend/internal/firebase"
+    "github.com/angga/saras-backend/internal/gemini"
     "go.uber.org/zap"
 )
 
@@ -13,6 +14,14 @@ func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
     r.Use(gin.Recovery())
     r.Use(middleware.Logger(logger))
     r.Use(middleware.CORS())
+
+    // Initialize Gemini Client
+    gc, err := gemini.NewClient()
+    if err != nil {
+        logger.Error("Failed to initialize Gemini client", zap.Error(err))
+    } else {
+        logger.Info("Gemini client initialized successfully")
+    }
 
     // ── Public ──────────────────────────────────────────
     r.GET("/health", func(c *gin.Context) {
@@ -25,10 +34,11 @@ func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
     api.Use(middleware.RateLimit(100)) // 100 req/hour per user
 
     // ARIA — Integrity Analysis
-    ariaH := handlers.NewARIAHandler(fbApp, logger)
+    ariaH := handlers.NewARIAHandler(fbApp, logger, gc)
     api.POST("/aria/analyze",   ariaH.AnalyzeCSV)
     api.GET( "/aria/reports",   ariaH.GetUserReports)
     api.GET( "/aria/report/:id", ariaH.GetReport)
+    api.POST("/aria/narrative", ariaH.GenerateNarrative)
 
     // NEXUS — BPS Data
     nexusH := handlers.NewNEXUSHandler(logger)
@@ -43,7 +53,7 @@ func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
     api.POST("/vera/surveys/:id/submit", veraH.SubmitResponse)
 
     // SIGMA — Statistical Analysis
-    sigmaH := handlers.NewSIGMAHandler(logger)
+    sigmaH := handlers.NewSIGMAHandler(logger, gc)
     api.POST("/sigma/recommend",        sigmaH.RecommendTest)
     api.POST("/sigma/regression",       sigmaH.RunRegression)
     api.POST("/sigma/ttest",            sigmaH.RunTTest)

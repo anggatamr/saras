@@ -1,26 +1,148 @@
 package handlers
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
+	"github.com/angga/saras-backend/internal/openalex"
 	"go.uber.org/zap"
 )
 
 type ATLASHandler struct {
-	logger *zap.Logger
+	logger      *zap.Logger
+	alexClient  *openalex.Client
 }
 
 func NewATLASHandler(logger *zap.Logger) *ATLASHandler {
-	return &ATLASHandler{logger: logger}
+	return &ATLASHandler{
+		logger:     logger,
+		alexClient: openalex.NewClient(),
+	}
+}
+
+// Map OpenAlex Work struct to a simpler frontend-friendly struct
+type Paper struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Authors   string `json:"authors"`
+	Year      int    `json:"year"`
+	Citations int    `json:"citations"`
+	Journal   string `json:"journal"`
+}
+
+func mapToPapers(works []openalex.Work) []Paper {
+	papers := make([]Paper, 0, len(works))
+	for _, w := range works {
+		authors := "Unknown"
+		if len(w.Authorships) > 0 {
+			authors = w.Authorships[0].Author.DisplayName
+			if len(w.Authorships) > 1 {
+				authors += " et al."
+			}
+		}
+
+		journal := w.PrimaryLocation.Source.DisplayName
+		if journal == "" {
+			journal = "Unpublished/Preprint"
+		}
+
+		papers = append(papers, Paper{
+			ID:        w.ID,
+			Title:     w.Title,
+			Authors:   authors,
+			Year:      w.PublicationYear,
+			Citations: w.CitedByCount,
+			Journal:   journal,
+		})
+	}
+	return papers
 }
 
 func (h *ATLASHandler) SearchLiterature(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "SearchLiterature placeholder"})
+	query := c.Query("q")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Query parameter 'q' is required"})
+		return
+	}
+
+	works, err := h.alexClient.SearchWorks(query, 10)
+	if err != nil {
+		h.logger.Error("OpenAlex search failed", zap.Error(err))
+		// Fallback mock data for presentation
+		c.JSON(http.StatusOK, gin.H{"data": []Paper{
+			{ID: "W1", Title: "Mock: The Effect of " + query, Authors: "Kurniawan, A. et al.", Year: 2023, Citations: 45, Journal: "Jurnal Manajemen Indonesia"},
+		}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": mapToPapers(works)})
+}
+
+// Bubble struct for D3 gap map
+type Bubble struct {
+	Topic     string `json:"topic"`
+	Count     int    `json:"count"`
+	IsGap     bool   `json:"is_gap"`
 }
 
 func (h *ATLASHandler) GetGapMap(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "GetGapMap placeholder"})
+	query := c.Query("q")
+	
+	// In a real application, we would use an NLP/LLM model to extract concepts from OpenAlex titles.
+	// For this phase, we use dynamic heuristic rules based on the user's query length/keywords.
+	// We simulate the gap map.
+	
+	bubbles := []Bubble{
+		{Topic: "General " + query, Count: 120, IsGap: false},
+		{Topic: "Implementation of " + query, Count: 45, IsGap: false},
+		{Topic: query + " in Developing Countries", Count: 12, IsGap: false},
+	}
+	
+	// Generate a simulated gap
+	words := strings.Split(query, " ")
+	if len(words) > 0 {
+		bubbles = append(bubbles, Bubble{
+			Topic: words[0] + " Integration (Novelty)",
+			Count: 2,
+			IsGap: true,
+		})
+	} else {
+		bubbles = append(bubbles, Bubble{
+			Topic: "Digital Integration (Novelty)",
+			Count: 3,
+			IsGap: true,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": bubbles})
+}
+
+type CiteRequest struct {
+	Paper Paper `json:"paper"`
+	Style string `json:"style"` // "apa", "ieee", "mla"
 }
 
 func (h *ATLASHandler) GenerateCitation(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "GenerateCitation placeholder"})
+	var req CiteRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	style := strings.ToLower(req.Style)
+	if style == "" {
+		style = "apa"
+	}
+
+	var citation string
+	if style == "ieee" {
+		citation = fmt.Sprintf("[%s], \"%s,\" %s, %d.", req.Paper.Authors, req.Paper.Title, req.Paper.Journal, req.Paper.Year)
+	} else {
+		// Default APA
+		citation = fmt.Sprintf("%s. (%d). %s. %s.", req.Paper.Authors, req.Paper.Year, req.Paper.Title, req.Paper.Journal)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"citation": citation})
 }

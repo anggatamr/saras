@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { UploadCloud, FileText, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import confetti from "canvas-confetti"
 
 export default function AriaPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -89,27 +90,66 @@ export default function AriaPage() {
       if (score < 0) score = 0
       if (score > 100) score = 100
 
-      // Generate AI Narrative
-      let ai_narrative = `Berdasarkan analisis file dataset dengan ${records.length} baris, Integrity Score yang diperoleh adalah ${score}/100. `
-      if (issues.length > 0) {
-        ai_narrative += `Ditemukan ${issues.length} masalah yang memerlukan perhatian. Sebagian besar merupakan indikasi data pencilan ekstrem (outlier) dan duplikasi baris. `
-        ai_narrative += `Saran: Periksa kembali instrumen pengumpulan data pada baris yang ditandai merah. Jangan menghapus data secara sepihak; laporkan temuan ini di BAB IV sebagai batasan penelitian.`
-      } else {
-        ai_narrative += `Data terlihat sangat natural tanpa indikasi fabrikasi atau duplikasi yang signifikan. Distribusi nilai berada dalam batas kewajaran statistik.`
-      }
-
       setResult({
         score,
         total_rows: records.length,
         flagged_rows: new Set(issues.map(i => i.row_index)).size,
         issues: issues.sort((a, b) => a.row_index - b.row_index),
-        ai_narrative
+        ai_narrative: ""
       })
+
+      if (score >= 90) {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+
     } catch (error) {
       console.error(error)
       alert("Gagal menganalisis file.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const [generatingNarrative, setGeneratingNarrative] = useState(false)
+
+  const handleGenerateNarrative = async () => {
+    if (!result) return
+    setGeneratingNarrative(true)
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+      const res = await fetch(`${apiUrl}/api/v1/aria/narrative`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score: result.score,
+          total_rows: result.total_rows,
+          flagged_rows: result.flagged_rows,
+          issues: result.issues
+        })
+      })
+      if (!res.ok) throw new Error("Gagal generate narasi")
+      const data = await res.json()
+      setResult({ ...result, ai_narrative: data.narrative })
+    } catch (error) {
+      console.error(error)
+      // Fallback narrative
+      let fallback = `Berdasarkan analisis dataset, Integrity Score adalah ${result.score}/100. `
+      if (result.issues.length > 0) fallback += "Ditemukan masalah yang memerlukan perhatian. "
+      fallback += "\n\n(Gagal terhubung ke AI. Ini adalah teks fallback.)"
+      setResult({ ...result, ai_narrative: fallback })
+    } finally {
+      setGeneratingNarrative(false)
+    }
+  }
+
+  const copyToClipboard = () => {
+    if (result && result.ai_narrative) {
+      navigator.clipboard.writeText(result.ai_narrative)
+      alert("Teks disalin ke clipboard!")
     }
   }
 
@@ -193,12 +233,28 @@ export default function AriaPage() {
 
               <div className="md:col-span-2 space-y-6">
                 <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-2 flex flex-row items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Interpretasi AI (BAB IV)</CardTitle>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Interpretasi AI (BAB IV)</CardTitle>
+                    </div>
+                    {result.ai_narrative && (
+                      <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                        Salin
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.ai_narrative}</p>
+                    {result.ai_narrative ? (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.ai_narrative}</p>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                        <p className="text-sm text-muted-foreground">Narasi belum di-generate. Klik tombol di bawah untuk meminta AI menyusun interpretasi.</p>
+                        <Button onClick={handleGenerateNarrative} disabled={generatingNarrative}>
+                          {generatingNarrative ? "Menyusun Narasi..." : "🤖 Generate Narasi BAB IV"}
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

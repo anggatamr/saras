@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export default function SigmaPage() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [showTechnical, setShowTechnical] = useState(false)
 
   const handleRun = () => {
     setLoading(true)
@@ -130,109 +131,13 @@ export default function SigmaPage() {
 
           {step === 3 && (
             <div className="grid gap-6 md:grid-cols-3">
-              <div className="md:col-span-1 space-y-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Uji Asumsi Klasik</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Normalitas</span>
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Multikolinearitas</span>
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Heteroskedastisitas</span>
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Autokorelasi</span>
-                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100"><AlertCircle className="w-3 h-3 mr-1"/> Marginal</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Model Fit Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">R Square</span>
-                      <span className="font-bold">0.684</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Adjusted R Square</span>
-                      <span className="font-bold">0.672</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">F Statistic</span>
-                      <span className="font-bold">42.15 (p &lt; 0.001)</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Button variant="outline" className="w-full" onClick={() => setStep(1)}>Mulai Analisis Baru</Button>
-              </div>
-
-              <div className="md:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Coefficients Table</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Model</TableHead>
-                          <TableHead>B</TableHead>
-                          <TableHead>Std. Error</TableHead>
-                          <TableHead>t</TableHead>
-                          <TableHead>Sig.</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">(Constant)</TableCell>
-                          <TableCell>2.104</TableCell>
-                          <TableCell>0.452</TableCell>
-                          <TableCell>4.655</TableCell>
-                          <TableCell>0.000</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">SocMed (X1)</TableCell>
-                          <TableCell>0.342</TableCell>
-                          <TableCell>0.102</TableCell>
-                          <TableCell>3.353</TableCell>
-                          <TableCell className="text-green-600 font-bold">0.001 ***</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Brand (X2)</TableCell>
-                          <TableCell>0.415</TableCell>
-                          <TableCell>0.095</TableCell>
-                          <TableCell>4.368</TableCell>
-                          <TableCell className="text-green-600 font-bold">0.000 ***</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Harga (X3)</TableCell>
-                          <TableCell>0.052</TableCell>
-                          <TableCell>0.088</TableCell>
-                          <TableCell>0.591</TableCell>
-                          <TableCell className="text-muted-foreground">0.556 ns</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-
+              <div className="md:col-span-3 space-y-6">
+                
                 <Card className="border-purple-200 bg-purple-50/30">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
                     <div className="flex items-center gap-2">
                       <BarChart3 className="h-5 w-5 text-purple-600" />
-                      <CardTitle className="text-lg">Interpretasi Naratif (Siap Salin ke BAB IV)</CardTitle>
+                      <CardTitle className="text-lg">Executive Summary (Interpretasi AI)</CardTitle>
                     </div>
                     <Button size="sm" className="bg-purple-600 hover:bg-purple-700">Salin ke Word</Button>
                   </CardHeader>
@@ -250,6 +155,119 @@ export default function SigmaPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <div className="flex justify-center">
+                  <Button variant="outline" onClick={() => setShowTechnical(!showTechnical)}>
+                    {showTechnical ? "Sembunyikan Detail Statistik" : "Tampilkan Detail Statistik Lanjutan"}
+                  </Button>
+                </div>
+
+                {showTechnical && (
+                  <div className="grid gap-6 md:grid-cols-3">
+                    <div className="md:col-span-1 space-y-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">Uji Asumsi Klasik</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Normalitas</span>
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Multikolinearitas</span>
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Heteroskedastisitas</span>
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Terpenuhi</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Autokorelasi</span>
+                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100"><AlertCircle className="w-3 h-3 mr-1"/> Marginal</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">Model Fit Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">R Square</span>
+                            <span className="font-bold">0.684</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Adjusted R Square</span>
+                            <span className="font-bold">0.672</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">F Statistic</span>
+                            <span className="font-bold">42.15 (p &lt; 0.001)</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="md:col-span-2 space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Coefficients Table</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="min-w-[120px]">Model</TableHead>
+                                  <TableHead>B</TableHead>
+                                  <TableHead>Std. Error</TableHead>
+                                  <TableHead>t</TableHead>
+                                  <TableHead>Sig.</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell className="font-medium">(Constant)</TableCell>
+                                  <TableCell>2.104</TableCell>
+                                  <TableCell>0.452</TableCell>
+                                  <TableCell>4.655</TableCell>
+                                  <TableCell>0.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">SocMed (X1)</TableCell>
+                                  <TableCell>0.342</TableCell>
+                                  <TableCell>0.102</TableCell>
+                                  <TableCell>3.353</TableCell>
+                                  <TableCell className="text-green-600 font-bold">0.001 ***</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Brand (X2)</TableCell>
+                                  <TableCell>0.415</TableCell>
+                                  <TableCell>0.095</TableCell>
+                                  <TableCell>4.368</TableCell>
+                                  <TableCell className="text-green-600 font-bold">0.000 ***</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Harga (X3)</TableCell>
+                                  <TableCell>0.052</TableCell>
+                                  <TableCell>0.088</TableCell>
+                                  <TableCell>0.591</TableCell>
+                                  <TableCell className="text-muted-foreground">0.556 ns</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="pt-4 flex justify-center">
+                  <Button variant="outline" className="w-1/2" onClick={() => setStep(1)}>Mulai Analisis Baru</Button>
+                </div>
               </div>
             </div>
           )}
