@@ -71,8 +71,8 @@ export default function Dashboard() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {modules.map((module) => (
-              <Link key={module.href} href={module.href} className="h-full">
-                <Card className="h-full border-4 border-foreground rounded-none bg-card neo-shadow hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.25)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 group">
+              <Link key={module.href} href={module.href} className="h-full flex">
+                <Card className="flex flex-col h-full w-full border-4 border-foreground rounded-none bg-card neo-shadow hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.25)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 group">
                   <CardHeader className="flex flex-row items-start gap-4 pb-2">
                     <div className={`p-3 border-2 border-foreground neo-shadow-sm rounded-none ${module.bg}`}>
                       <module.icon className={`h-6 w-6 ${module.color}`} />
@@ -82,7 +82,7 @@ export default function Dashboard() {
                       <CardDescription className="font-bold text-foreground mt-1 text-sm">{module.description}</CardDescription>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex flex-col justify-between h-[calc(100%-80px)]">
+                  <CardContent className="flex flex-col justify-between flex-1 pb-6">
                     <p className="text-xs font-semibold text-muted-foreground mt-2 leading-relaxed">{module.details}</p>
                     <div className="mt-4 flex items-center text-xs font-black uppercase tracking-wider text-primary group-hover:underline">
                       Buka Modul <ArrowRight className="ml-1.5 h-4 w-4" />
