@@ -154,7 +154,7 @@ export default function NexusPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
                     <CardTitle className="text-red-900 flex items-center font-black text-2xl uppercase tracking-tight"><BellRing className="w-6 h-6 mr-2 text-red-700"/> BPS Mismatch Alert</CardTitle>
-                    <CardDescription className="text-xs font-bold text-red-800 uppercase tracking-wide mt-1">Terdeteksi perbedaan signifikan antara data primer Anda dan data resmi BPS.</CardDescription>
+                    <CardDescription className="text-xs font-bold text-red-800 uppercase tracking-wide mt-1">Terdeteksi {alertCount} perbedaan signifikan antara data primer Anda dan data resmi BPS.</CardDescription>
                   </div>
                   <Badge variant="destructive" className="border-2 border-foreground bg-red-500 text-white font-black neo-shadow-sm rounded-none uppercase text-[10px] tracking-wider px-3 py-1">Tindakan Diperlukan</Badge>
                 </div>

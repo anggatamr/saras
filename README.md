@@ -263,20 +263,25 @@ cd saras-backend
 gcloud builds submit --tag asia-southeast2-docker.pkg.dev/PROJECT_ID/saras/saras-api:latest .
 gcloud run deploy saras-api --image=... --region=asia-southeast2
 
-# Frontend → Firebase Hosting
+# Frontend → Firebase Hosting (Option A)
 cd saras-frontend
 npm run build
 firebase deploy --only hosting
+
+# Frontend → Vercel (Option B / CI/CD Backup)
+cd saras-frontend
+npm run build
+vercel --prod
 ```
 
 ### CI/CD
 
 Every push to `main` triggers the GitHub Actions pipeline (`.github/workflows/deploy.yml`) which automatically:
-1. Runs Go tests
-2. Builds the Docker image via Cloud Build
-3. Deploys to Cloud Run
+1. Runs Go tests (backend)
+2. Builds the Docker image and pushes it to GCR
+3. Deploys the backend container to Google Cloud Run
 4. Builds the Next.js static site
-5. Deploys to Firebase Hosting
+5. Deploys the frontend to Vercel (as the live production/alternate deployment)
 
 ---
 

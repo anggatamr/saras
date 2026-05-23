@@ -12,6 +12,7 @@ import (
 func NewRouter(logger *zap.Logger) *gin.Engine {
     r := gin.New()
     r.Use(gin.Recovery())
+    r.Use(middleware.RequestID())
     r.Use(middleware.Logger(logger))
     r.Use(middleware.CORS())
 
@@ -24,9 +25,7 @@ func NewRouter(logger *zap.Logger) *gin.Engine {
     }
 
     // ── Public ──────────────────────────────────────────
-    r.GET("/health", func(c *gin.Context) {
-        c.JSON(200, gin.H{"status": "ok", "service": "saras-api"})
-    })
+    r.GET("/health", handlers.HealthCheck)
 
     // ── Protected (Firebase Auth required) ─────────────
     api := r.Group("/api/v1")

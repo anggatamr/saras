@@ -19,12 +19,16 @@ func Logger(logger *zap.Logger) gin.HandlerFunc {
 		end := time.Now()
 		latency := end.Sub(start)
 
+		requestID, _ := c.Get("RequestID")
+		reqIDStr, _ := requestID.(string)
+
 		if len(c.Errors) > 0 {
 			for _, e := range c.Errors.Errors() {
-				logger.Error(e)
+				logger.Error(e, zap.String("request_id", reqIDStr))
 			}
 		} else {
 			logger.Info(path,
+				zap.String("request_id", reqIDStr),
 				zap.Int("status", c.Writer.Status()),
 				zap.String("method", c.Request.Method),
 				zap.String("path", path),
