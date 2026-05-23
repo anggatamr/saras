@@ -28,11 +28,11 @@
     --destructive: 0 74% 42%; /* #B91C1C Red */
     --destructive-foreground: 60 20% 98%; /* Warm White */
 
-    --border: 40 14% 88%; /* #E4E1DC Border */
-    --input: 40 14% 88%; /* #E4E1DC Border */
+    --border: 24 10% 10%; /* Thick high-contrast dark border for Neobrutalism */
+    --input: 24 10% 10%;
     --ring: 26 91% 41%; /* #C95E0A Accent */
 
-    --radius: 0.625rem; /* 10px default */
+    --radius: 0px; /* Neobrutalism looks spectacular with sharp 0px or rigid corners */
   }
 
   .dark {
@@ -60,8 +60,8 @@
     --destructive: 0 62% 30%;
     --destructive-foreground: 60 20% 98%;
 
-    --border: 24 10% 20%;
-    --input: 24 10% 20%;
+    --border: 60 20% 98%; /* High contrast light border in dark mode */
+    --input: 60 20% 98%;
     --ring: 26 91% 41%;
   }
 }
@@ -74,3 +74,45 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+@layer utilities {
+  .neo-shadow {
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  }
+  .neo-shadow-sm {
+    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  }
+  .neo-shadow-lg {
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  }
+  .neo-shadow-primary {
+    box-shadow: 4px 4px 0px 0px hsl(var(--primary));
+  }
+  .dark .neo-shadow {
+    box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.25);
+  }
+  .dark .neo-shadow-sm {
+    box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 0.25);
+  }
+  .dark .neo-shadow-lg {
+    box-shadow: 6px 6px 0px 0px rgba(255, 255, 255, 0.25);
+  }
+  .dark .neo-shadow-primary {
+    box-shadow: 4px 4px 0px 0px hsl(var(--primary));
+  }
+
+  /* Tactile Neobrutalism Interactive effects */
+  .neo-interactive {
+    @apply transition-all duration-150;
+  }
+  .neo-interactive:hover {
+    @apply -translate-x-[2px] -translate-y-[2px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+  }
+  .dark .neo-interactive:hover {
+    @apply -translate-x-[2px] -translate-y-[2px] shadow-[6px_6px_0px_0px_rgba(255,255,255,0.25)];
+  }
+  .neo-interactive:active {
+    @apply translate-x-[2px] translate-y-[2px] shadow-none;
+  }
+}
+

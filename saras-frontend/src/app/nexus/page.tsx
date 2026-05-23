@@ -1,13 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
 import { Topbar } from "@/components/layout/Topbar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, BellRing, Copy, Loader2, Map } from "lucide-react"
+import { Search, BellRing, Copy, Loader2, Map as MapIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { fetchWithAuth } from "@/lib/api"
+import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api"
 
 interface BpsComparison {
   indicator: string
@@ -20,7 +23,30 @@ interface BpsComparison {
   citation: string
 }
 
+const mapContainerStyle = {
+  width: '100%',
+  height: '350px'
+};
+
+const center = {
+  lat: -0.789275, // Center on Indonesia
+  lng: 113.921327
+};
+
+const provinceCoordinates: Record<string, { lat: number, lng: number }> = {
+  "Sumatera Utara": { lat: 2.1153547, lng: 99.5450974 },
+  "DKI Jakarta": { lat: -6.2088224, lng: 106.845599 },
+  "Jawa Barat": { lat: -7.090911, lng: 107.668887 },
+  "Jawa Timur": { lat: -7.5360639, lng: 112.2384017 },
+  "Bali": { lat: -8.4095178, lng: 115.188916 }
+};
+
 export default function NexusPage() {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+  })
+
   const [showCitation, setShowCitation] = useState<number | null>(null)
   const [province, setProvince] = useState("Sumatera Utara")
   const [loading, setLoading] = useState(false)
@@ -40,7 +66,7 @@ export default function NexusPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
       
       const fetchPromises = userResearchData.map(async (item) => {
-        const res = await fetch(`${apiUrl}/api/v1/nexus/compare`, {
+        const res = await fetchWithAuth(`${apiUrl}/api/v1/nexus/compare`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -87,23 +113,23 @@ export default function NexusPage() {
   const topAlert = data.find(d => d.alertLevel === "high")
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-background">
       <Topbar title="NEXUS - National Data Intelligence Hub" subtitle="Sinkronisasi data sekunder Anda dengan indikator resmi BPS." />
       
       <main className="flex-1 overflow-auto p-6">
         <div className="mx-auto max-w-5xl space-y-6">
           
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center border-b-4 border-foreground pb-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">Perbandingan Data BPS</h2>
-              <p className="text-muted-foreground">Tinjau kesesuaian data riset Anda dengan sumber nasional.</p>
+              <h2 className="text-3xl font-black uppercase tracking-tight text-foreground">Perbandingan Data BPS</h2>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mt-1">Tinjau kesesuaian data riset Anda dengan sumber nasional resmi.</p>
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px] border-2 border-foreground bg-background rounded-none font-bold neo-shadow-sm">
                   <SelectValue placeholder="Pilih Provinsi" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-2 border-foreground rounded-none">
                   <SelectItem value="Sumatera Utara">Sumatera Utara</SelectItem>
                   <SelectItem value="DKI Jakarta">DKI Jakarta</SelectItem>
                   <SelectItem value="Jawa Barat">Jawa Barat</SelectItem>
@@ -111,31 +137,38 @@ export default function NexusPage() {
                   <SelectItem value="Bali">Bali</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleSearch} disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />} 
+              <Button 
+                onClick={handleSearch} 
+                disabled={loading}
+                className="border-2 border-foreground bg-blue-300 hover:bg-blue-400 text-foreground neo-shadow-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none font-black text-xs uppercase tracking-wider px-6 py-3 rounded-none transition-all"
+              >
+                {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-foreground" /> : <Search className="w-4 h-4 mr-2 text-foreground" />} 
                 {loading ? "Mencari..." : "Cari Data"}
               </Button>
             </div>
           </div>
 
           {hasAlerts && topAlert && (
-            <Card className="border-primary/20">
-              <CardHeader className="bg-blue-50/50 pb-4">
-                <div className="flex items-center justify-between">
+            <Card className="border-4 border-foreground bg-red-100 neo-shadow-lg rounded-none overflow-hidden">
+              <CardHeader className="bg-red-200/50 pb-4 border-b-2 border-foreground">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <CardTitle className="text-blue-900 flex items-center"><BellRing className="w-5 h-5 mr-2 text-blue-600"/> BPS Mismatch Alert</CardTitle>
-                    <CardDescription>Terdeteksi {alertCount} perbedaan signifikan antara data primer Anda dan data resmi BPS.</CardDescription>
+                    <CardTitle className="text-red-900 flex items-center font-black text-2xl uppercase tracking-tight"><BellRing className="w-6 h-6 mr-2 text-red-700"/> BPS Mismatch Alert</CardTitle>
+                    <CardDescription className="text-xs font-bold text-red-800 uppercase tracking-wide mt-1">Terdeteksi perbedaan signifikan antara data primer Anda dan data resmi BPS.</CardDescription>
                   </div>
-                  <Badge variant="destructive" className="bg-red-500">Tindakan Diperlukan</Badge>
+                  <Badge variant="destructive" className="border-2 border-foreground bg-red-500 text-white font-black neo-shadow-sm rounded-none uppercase text-[10px] tracking-wider px-3 py-1">Tindakan Diperlukan</Badge>
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="p-4 border rounded-lg bg-red-50/50 border-red-100 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="p-4 border-2 border-foreground bg-red-200 text-red-950 rounded-none flex flex-col md:flex-row gap-4 items-start md:items-center justify-between neo-shadow-sm">
                   <div>
-                    <h4 className="font-semibold text-red-900">{topAlert.indicator} {topAlert.province} ({topAlert.year})</h4>
-                    <p className="text-sm text-red-700/80 mt-1">Data Anda: {topAlert.userValue} | Data Resmi BPS: {topAlert.value} (Selisih {topAlert.difference})</p>
+                    <h4 className="font-black text-md uppercase tracking-wide text-red-950">{topAlert.indicator} - {topAlert.province} ({topAlert.year})</h4>
+                    <p className="text-xs font-bold text-red-900 mt-1">Data Anda: {topAlert.userValue} | Data Resmi BPS: {topAlert.value} (Selisih {topAlert.difference})</p>
                   </div>
-                  <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-100 shrink-0" onClick={() => setShowCitation(data.indexOf(topAlert))}>
+                  <Button 
+                    className="border-2 border-foreground bg-white text-red-900 hover:bg-red-50 neo-shadow-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none font-black text-xs uppercase tracking-wider px-5 py-3 rounded-none shrink-0 transition-all" 
+                    onClick={() => setShowCitation(data.indexOf(topAlert))}
+                  >
                     Lihat Kutipan Resmi
                   </Button>
                 </div>
@@ -143,46 +176,52 @@ export default function NexusPage() {
             </Card>
           )}
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card className="border-4 border-foreground rounded-none neo-shadow bg-background">
+            <CardHeader className="border-b-2 border-foreground bg-secondary">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="flex items-center"><Map className="w-5 h-5 mr-2 text-muted-foreground"/> Peta Persebaran Data (Choropleth)</CardTitle>
-                  <CardDescription>Visualisasi disparitas indikator berdasarkan provinsi.</CardDescription>
+                  <CardTitle className="flex items-center text-lg font-black uppercase tracking-tight text-foreground"><MapIcon className="w-5 h-5 mr-2 text-foreground"/> Peta Interaktif Wilayah Indonesia</CardTitle>
+                  <CardDescription className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Visualisasi lokasi data sekunder nasional berdasarkan provinsi terpilih.</CardDescription>
                 </div>
-                <Badge variant="outline">Simulasi D3.js</Badge>
+                <Badge variant="outline" className="border-2 border-foreground bg-green-200 text-green-950 font-black rounded-none uppercase text-[10px] tracking-wider px-2.5 py-0.5">Live Google Maps</Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="w-full h-[250px] bg-slate-50 border rounded-lg flex items-center justify-center relative overflow-hidden">
-                {/* Simulated SVG Map Blocks */}
-                <div className="absolute top-1/4 left-1/4 w-32 h-16 bg-green-200 rounded-full opacity-70 blur-xl"></div>
-                <div className="absolute top-1/3 left-1/3 w-48 h-24 bg-amber-200 rounded-full opacity-70 blur-xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-red-200 rounded-full opacity-70 blur-xl"></div>
-                
-                <div className="z-10 text-center">
-                  <Map className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-slate-600">Peta Indonesia Sedang Dimuat...</p>
-                  <p className="text-xs text-slate-400 mt-1">Menunggu integrasi TopoJSON BPS</p>
-                </div>
-                
-                {/* Simulated Heatmap Legend */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white p-2 rounded-md shadow-sm border text-[10px]">
-                  <span>Rendah</span>
-                  <div className="w-4 h-4 bg-green-200 rounded-sm"></div>
-                  <div className="w-4 h-4 bg-amber-200 rounded-sm"></div>
-                  <div className="w-4 h-4 bg-red-400 rounded-sm"></div>
-                  <span>Tinggi</span>
-                </div>
+            <CardContent className="pt-6">
+              <div className="w-full border-4 border-foreground rounded-none overflow-hidden neo-shadow-sm">
+                {isLoaded ? (
+                  <GoogleMap
+                    mapContainerStyle={mapContainerStyle}
+                    center={provinceCoordinates[province] || center}
+                    zoom={provinceCoordinates[province] ? 8 : 5}
+                  >
+                    {provinceCoordinates[province] && (
+                      <MarkerF
+                        position={provinceCoordinates[province]}
+                        label={{
+                          text: province,
+                          className: "font-black bg-white px-2 py-1 rounded-none shadow-sm border-2 border-foreground text-xs text-foreground -translate-y-8"
+                        }}
+                      />
+                    )}
+                  </GoogleMap>
+                ) : (
+                  <div className="w-full h-[350px] bg-secondary/30 flex items-center justify-center">
+                    <div className="text-center">
+                      <MapIcon className="w-12 h-12 text-foreground/30 mx-auto mb-2 animate-spin" />
+                      <p className="text-sm font-bold text-muted-foreground">Sedang memuat Google Maps...</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ringkasan Indikator Makro</CardTitle>
+          <Card className="border-4 border-foreground rounded-none neo-shadow">
+            <CardHeader className="border-b-2 border-foreground bg-secondary">
+              <CardTitle className="text-lg font-black uppercase tracking-tight text-foreground">Ringkasan Indikator Makro</CardTitle>
+              <CardDescription className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Perbandingan lengkap parameter riset Anda dengan baseline BPS nasional.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -198,23 +237,29 @@ export default function NexusPage() {
                   <TableBody>
                     {data.length === 0 && !loading && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">Belum ada data. Silakan lakukan pencarian.</TableCell>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-bold">Belum ada data. Silakan lakukan pencarian.</TableCell>
                       </TableRow>
                     )}
                     {data.map((item, index) => (
-                      <TableRow key={index} className={item.alertLevel === "high" ? "bg-red-50/30" : ""}>
-                        <TableCell className="font-medium">{item.indicator}</TableCell>
-                        <TableCell>{item.year}</TableCell>
-                        <TableCell>{item.userValue}</TableCell>
-                        <TableCell className="text-blue-600 font-medium">{item.value}</TableCell>
+                      <TableRow key={index} className={item.alertLevel === "high" ? "bg-red-100/40" : ""}>
+                        <TableCell className="font-black text-foreground">{item.indicator}</TableCell>
+                        <TableCell className="font-black">{item.year}</TableCell>
+                        <TableCell className="font-black">{item.userValue}</TableCell>
+                        <TableCell className="text-blue-700 font-black">{item.value}</TableCell>
                         <TableCell>
-                          <span className={item.alertLevel === "high" ? "text-red-500 font-bold" : item.alertLevel === "medium" ? "text-amber-500 font-bold" : "text-green-600"}>
+                          <span className={cn(
+                            "px-2 py-0.5 border-2 border-foreground rounded-none text-xs font-black neo-shadow-sm bg-background",
+                            item.alertLevel === "high" ? "text-red-600" : item.alertLevel === "medium" ? "text-amber-600" : "text-green-600"
+                          )}>
                             {item.difference}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => setShowCitation(index)}>
-                            <Copy className="w-4 h-4 mr-2" /> Kutip
+                          <Button 
+                            className="border-2 border-foreground bg-secondary text-foreground hover:bg-muted neo-shadow-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none font-black text-xs uppercase tracking-wider px-3 py-2.5 rounded-none transition-all"
+                            onClick={() => setShowCitation(index)}
+                          >
+                            <Copy className="w-3.5 h-3.5 mr-2 text-foreground" /> Kutip
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -226,19 +271,28 @@ export default function NexusPage() {
           </Card>
 
           {showCitation !== null && data[showCitation] && (
-            <Card className="bg-slate-50 border-slate-200 shadow-inner">
+            <Card className="border-4 border-foreground bg-foreground text-background neo-shadow-lg rounded-none mt-6">
               <CardContent className="p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Auto-Cite Generator (APA 7th)</span>
-                  <Button variant="ghost" size="sm" onClick={() => setShowCitation(null)}>Tutup</Button>
+                  <span className="text-xs font-black uppercase tracking-[0.15em] text-green-400 font-mono">Auto-Cite Generator (APA 7th)</span>
+                  <Button 
+                    className="text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-white border-2 border-transparent hover:border-white px-2 py-0.5 rounded-none" 
+                    onClick={() => setShowCitation(null)}
+                  >
+                    Tutup
+                  </Button>
                 </div>
-                <div className="bg-white p-3 rounded border font-mono text-sm break-words flex justify-between items-center group">
-                  <p>{data[showCitation].citation}</p>
-                  <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => {
-                    navigator.clipboard.writeText(data[showCitation].citation);
-                    alert("Kutipan disalin ke clipboard!");
-                  }}>
-                    <Copy className="w-4 h-4 text-muted-foreground" />
+                <div className="bg-slate-900 border-2 border-green-400 p-4 rounded-none font-mono text-sm text-green-300 break-words flex justify-between items-center group">
+                  <p className="flex-1 mr-4">{data[showCitation].citation}</p>
+                  <Button 
+                    size="icon" 
+                    className="border-2 border-green-400 text-green-400 hover:bg-green-400/20 px-3 py-2 rounded-none transition-all shrink-0 bg-transparent"
+                    onClick={() => {
+                      navigator.clipboard.writeText(data[showCitation].citation);
+                      alert("Kutipan disalin ke clipboard!");
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

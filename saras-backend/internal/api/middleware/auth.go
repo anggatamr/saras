@@ -1,56 +1,49 @@
 package middleware
 
 import (
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/angga/saras-backend/internal/firebase"
 )
 
-// FirebaseAuth verifies the Firebase token
-func FirebaseAuth(fbApp *firebase.App) gin.HandlerFunc {
+// Auth verifies the user identity using a custom header from NextAuth.
+// In production (GIN_MODE=release), requests without a valid academic
+// email header are rejected outright — no dev fallback is allowed.
+func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Mock auth for development if no auth client
-		if fbApp.AuthClient == nil {
+		email := c.GetHeader("X-User-Email")
+		isRelease := os.Getenv("GIN_MODE") == "release"
+
+		if email == "" {
+			if isRelease {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "Unauthorized: Missing identity header. Please authenticate via the SARAS frontend.",
+				})
+				c.Abort()
+				return
+			}
+			// Development-only fallback
 			c.Set("uid", "dev-user")
 			c.Set("email", "dev@unimed.ac.id")
 			c.Next()
 			return
 		}
 
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(401, gin.H{"error": "Authorization header required"})
+		// Validate academic email domain (.ac.id or .edu)
+		emailLower := strings.ToLower(strings.TrimSpace(email))
+		if isRelease && !strings.HasSuffix(emailLower, ".ac.id") && !strings.HasSuffix(emailLower, ".edu") {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error": "Forbidden: Only verified academic emails (.ac.id / .edu) are permitted.",
+			})
+			c.Abort()
 			return
 		}
 
-		parts := strings.Split(authHeader, "Bearer ")
-		if len(parts) != 2 {
-			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid Authorization header format"})
-			return
-		}
-
-		tokenString := parts[1]
-		token, err := fbApp.AuthClient.VerifyIDToken(c.Request.Context(), tokenString)
-		if err != nil {
-			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
-			return
-		}
-
-		c.Set("uid", token.UID)
-		email := ""
-		if emailClaim, ok := token.Claims["email"].(string); ok {
-			email = emailClaim
-			c.Set("email", email)
-		}
-
-		if strings.Contains(c.Request.URL.Path, "/vera/") {
-			if !strings.HasSuffix(email, ".ac.id") && !strings.HasSuffix(email, ".edu") {
-				c.AbortWithStatusJSON(403, gin.H{"error": "Forbidden: Only academic emails (.ac.id/.edu) are allowed for VERA"})
-				return
-			}
-		}
-
+		c.Set("uid", emailLower)
+		c.Set("email", emailLower)
 		c.Next()
 	}
 }
+

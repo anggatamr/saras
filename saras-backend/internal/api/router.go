@@ -4,12 +4,12 @@ import (
     "github.com/gin-gonic/gin"
     "github.com/angga/saras-backend/internal/api/handlers"
     "github.com/angga/saras-backend/internal/api/middleware"
-    "github.com/angga/saras-backend/internal/firebase"
+    "github.com/angga/saras-backend/internal/database"
     "github.com/angga/saras-backend/internal/gemini"
     "go.uber.org/zap"
 )
 
-func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
+func NewRouter(logger *zap.Logger) *gin.Engine {
     r := gin.New()
     r.Use(gin.Recovery())
     r.Use(middleware.Logger(logger))
@@ -30,11 +30,11 @@ func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
 
     // ── Protected (Firebase Auth required) ─────────────
     api := r.Group("/api/v1")
-    api.Use(middleware.FirebaseAuth(fbApp))
+    api.Use(middleware.Auth())
     api.Use(middleware.RateLimit(100)) // 100 req/hour per user
 
     // ARIA — Integrity Analysis
-    ariaH := handlers.NewARIAHandler(fbApp, logger, gc)
+    ariaH := handlers.NewARIAHandler(logger, gc)
     api.POST("/aria/analyze",   ariaH.AnalyzeCSV)
     api.GET( "/aria/reports",   ariaH.GetUserReports)
     api.GET( "/aria/report/:id", ariaH.GetReport)
@@ -46,8 +46,11 @@ func NewRouter(fbApp *firebase.App, logger *zap.Logger) *gin.Engine {
     api.GET("/nexus/province/:code",    nexusH.GetProvinceData)
     api.POST("/nexus/compare",          nexusH.CompareWithBPS)
 
+    // Initialize Database
+    db := database.NewDatabase(logger)
+
     // VERA — Respondent
-    veraH := handlers.NewVERAHandler(fbApp, logger)
+    veraH := handlers.NewVERAHandler(logger, db)
     api.POST("/vera/surveys",           veraH.CreateSurvey)
     api.GET( "/vera/surveys/active",    veraH.GetActiveSurveys)
     api.POST("/vera/surveys/:id/submit", veraH.SubmitResponse)

@@ -1,5 +1,5 @@
 # ─── Stage 1: Builder ───────────────────────────────────────
-FROM golang:1.22-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 # Install dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -15,7 +15,7 @@ COPY . .
 
 # Build binary (optimized, stripped)
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags="-w -s -X main.Version=$(git describe --tags --always)" \
+    -ldflags="-w -s -X main.Version=$(git describe --tags --always 2>/dev/null || echo 'v1.0.0')" \
     -o saras-api \
     ./cmd/server
 

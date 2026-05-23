@@ -9,7 +9,6 @@ import (
     "time"
 
     "github.com/angga/saras-backend/internal/api"
-    "github.com/angga/saras-backend/internal/firebase"
     "go.uber.org/zap"
 )
 
@@ -18,14 +17,8 @@ func main() {
     logger, _ := zap.NewProduction()
     defer logger.Sync()
 
-    // ── Firebase Admin Init ────────────────────────────
-    fbApp, err := firebase.InitApp(os.Getenv("GOOGLE_CLOUD_PROJECT"))
-    if err != nil {
-        logger.Fatal("firebase init failed", zap.Error(err))
-    }
-
     // ── Router ─────────────────────────────────────────
-    router := api.NewRouter(fbApp, logger)
+    router := api.NewRouter(logger)
 
     // ── Server ─────────────────────────────────────────
     port := os.Getenv("PORT")

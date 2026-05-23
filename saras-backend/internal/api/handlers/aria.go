@@ -8,19 +8,17 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/angga/saras-backend/internal/firebase"
 	"github.com/angga/saras-backend/internal/gemini"
 	"go.uber.org/zap"
 )
 
 type ARIAHandler struct {
-	fbApp        *firebase.App
 	logger       *zap.Logger
 	geminiClient *gemini.Client
 }
 
-func NewARIAHandler(fbApp *firebase.App, logger *zap.Logger, gc *gemini.Client) *ARIAHandler {
-	return &ARIAHandler{fbApp: fbApp, logger: logger, geminiClient: gc}
+func NewARIAHandler(logger *zap.Logger, gc *gemini.Client) *ARIAHandler {
+	return &ARIAHandler{logger: logger, geminiClient: gc}
 }
 
 type IntegrityAnalysisResult struct {

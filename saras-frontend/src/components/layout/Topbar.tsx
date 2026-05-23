@@ -37,31 +37,41 @@ export function Topbar({ title, subtitle }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b-4 border-foreground bg-background px-4 lg:h-[60px] lg:px-6">
       <MobileSidebar />
       <div className="flex flex-1 flex-col justify-center overflow-hidden">
-        <h1 className="text-lg font-semibold md:text-xl truncate">{title}</h1>
-        {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
+        <h1 className="text-md md:text-lg font-black uppercase tracking-tight text-foreground truncate">{title}</h1>
+        {subtitle && <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">{subtitle}</p>}
       </div>
       
       <div className="flex items-center gap-2 md:gap-4">
-        <Button variant="outline" size="sm" className="hidden lg:flex bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800" onClick={handleExportWord}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="hidden lg:flex bg-blue-100 text-blue-900 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none font-bold rounded-none transition-all" 
+          onClick={handleExportWord}
+        >
           <FileText className="mr-2 h-4 w-4" />
           Word
         </Button>
-        <Button variant="outline" size="sm" className="hidden md:flex bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800" onClick={handleExportPDF}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="hidden md:flex bg-green-100 text-green-900 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none font-bold rounded-none transition-all" 
+          onClick={handleExportPDF}
+        >
           <Download className="mr-2 h-4 w-4" />
           PDF
         </Button>
 
         <div className="hidden md:flex items-center gap-2 text-sm ml-2">
-          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-            <span className="mr-1 flex h-2 w-2 rounded-full bg-green-500"></span>
+          <Badge variant="outline" className="border-2 border-foreground bg-background font-bold text-foreground rounded-none neo-shadow-sm py-1">
+            <span className="mr-1.5 flex h-2 w-2 rounded-none border border-foreground bg-green-400"></span>
             Online
           </Badge>
         </div>
         
-        <button className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80">
+        <button className="flex h-9 w-9 items-center justify-center border-2 border-foreground bg-secondary text-foreground neo-shadow-sm hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all rounded-none">
           <Bell className="h-4 w-4" />
           <span className="sr-only">Notifications</span>
         </button>
@@ -69,3 +79,4 @@ export function Topbar({ title, subtitle }: TopbarProps) {
     </header>
   )
 }
+
