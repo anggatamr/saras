@@ -13,6 +13,10 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     headers.set('X-User-Email', session.user.email);
   }
 
+  // Inject secure handshake secret for backend communication
+  const apiSecret = process.env.NEXT_PUBLIC_API_SECRET || "saras-secret-handshake-token-9988";
+  headers.set('X-Saras-Secret', apiSecret);
+
   return fetch(url, {
     ...options,
     headers

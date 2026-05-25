@@ -14,7 +14,20 @@ import (
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.GetHeader("X-User-Email")
+		secret := c.GetHeader("X-Saras-Secret")
 		isRelease := os.Getenv("GIN_MODE") == "release"
+
+		// Gateway-level Shared Secret Validation in production
+		if isRelease {
+			expectedSecret := os.Getenv("SARAS_API_SECRET")
+			if expectedSecret != "" && secret != expectedSecret {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "Unauthorized: Invalid gateway signature. Direct API access is restricted.",
+				})
+				c.Abort()
+				return
+			}
+		}
 
 		if email == "" {
 			if isRelease {

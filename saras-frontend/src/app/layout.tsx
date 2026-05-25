@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syne, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Sidebar, BottomNav } from "@/components/layout/Sidebar";
 
-const inter = Inter({ subsets: ["latin"] });
+const syne = Syne({ 
+  subsets: ["latin"],
+  variable: '--font-syne',
+});
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: '--font-hanken-grotesk',
+});
 
 export const metadata: Metadata = {
   title: "SARAS - Sistem Asisten Riset Akademik Statistika",
@@ -19,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      <body className={inter.className}>
+    <html lang="id" className={`${syne.variable} ${hankenGrotesk.variable}`}>
+      <body className={`font-sans antialiased`}>
         <AuthProvider>
           <ToastProvider>
             <div className="flex h-screen w-full overflow-hidden pb-[64px] md:pb-0">

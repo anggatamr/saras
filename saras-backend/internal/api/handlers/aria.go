@@ -313,6 +313,14 @@ func (h *ARIAHandler) GenerateNarrative(c *gin.Context) {
 - Detail masalah: %v
 Tulis interpretasi untuk BAB IV skripsi.`, input.Score, input.TotalRows, input.FlaggedRows, input.Issues)
 
+	if h.geminiClient == nil {
+		h.logger.Error("Gemini client is uninitialized (missing GEMINI_API_KEY)")
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Layanan AI Narasi Akademik (ARIA) sedang tidak tersedia. Silakan periksa konfigurasi GEMINI_API_KEY pada backend.",
+		})
+		return
+	}
+
 	output, err := h.geminiClient.GenerateStructuredNarrative(c.Request.Context(), prompt)
 	if err != nil {
 		h.logger.Error("Failed to generate structured narrative", zap.Error(err))

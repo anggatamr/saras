@@ -31,6 +31,7 @@ const devNav = [
 ]
 
 import { useAuth } from "@/lib/auth"
+import { SarasLogo } from "@/components/ui/SarasLogo"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -39,11 +40,8 @@ export function Sidebar() {
   return (
     <div className="hidden h-full w-[240px] flex-col border-r-4 border-foreground bg-background md:flex">
       <div className="flex h-14 items-center border-b-4 border-foreground px-4 bg-background">
-        <Link href="/" className="flex items-center gap-2 font-black text-foreground uppercase tracking-tight">
-          <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-primary text-primary-foreground neo-shadow-sm font-black rounded-none">
-            S
-          </div>
-          <span className="text-xl">SARAS</span>
+        <Link href="/">
+          <SarasLogo iconSize="sm" textSize="md" />
         </Link>
       </div>
 
@@ -173,11 +171,8 @@ export function MobileSidebar() {
       <SheetContent side="left" className="w-[240px] p-0 border-r-4 border-foreground">
         <div className="flex h-full flex-col bg-background">
           <div className="flex h-14 items-center border-b-4 border-foreground px-4">
-            <Link href="/" className="flex items-center gap-2 font-black text-foreground uppercase tracking-tight">
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-primary text-primary-foreground neo-shadow-sm font-black rounded-none">
-                S
-              </div>
-              <span className="text-xl">SARAS</span>
+            <Link href="/">
+              <SarasLogo iconSize="sm" textSize="md" />
             </Link>
           </div>
 

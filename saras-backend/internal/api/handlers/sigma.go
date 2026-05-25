@@ -223,6 +223,14 @@ Instruksi Penulisan:
    - Interpretasi hasil Uji t secara parsial untuk masing-masing variabel independen X (bagaimana arah pengaruh positif/negatif, dan signifikansinya).
 4. Jangan gunakan bullet-point. Tulis dalam bentuk beberapa paragraf naratif akademis yang padat dan komprehensif.`
 
+	if h.geminiClient == nil {
+		h.logger.Error("Gemini client is uninitialized (missing GEMINI_API_KEY)")
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Layanan AI Narasi Akademik (SIGMA) sedang tidak tersedia. Silakan periksa konfigurasi GEMINI_API_KEY pada backend.",
+		})
+		return
+	}
+
 	output, err := h.geminiClient.GenerateStructuredNarrative(c.Request.Context(), prompt)
 	if err != nil {
 		h.logger.Error("Failed to generate structured narrative", zap.Error(err))

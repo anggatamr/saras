@@ -4,65 +4,92 @@
 
 @layer base {
   :root {
-    --background: 60 20% 98%; /* #FAFAF7 */
-    --foreground: 24 10% 10%; /* #1C1917 */
+    --background: #fff8f6;
+    --foreground: #241913;
 
-    --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 24 10% 10%; /* #1C1917 */
+    --surface: #fff8f6;
+    --surface-dim: #ebd6cc;
+    --surface-bright: #fff8f6;
+    
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #fff1eb;
+    --surface-container: #ffeae0;
+    --surface-container-high: #f9e4da;
+    --surface-container-highest: #f3ded5;
 
-    --popover: 0 0% 100%; /* #FFFFFF */
-    --popover-foreground: 24 10% 10%; /* #1C1917 */
+    --card: #e0e0dc; /* Using Secondary (Pastel Sand) for Cards by default per design */
+    --card-foreground: #241913;
 
-    --primary: 26 91% 41%; /* #C95E0A Accent */
-    --primary-foreground: 60 20% 98%; /* Warm White */
+    --popover: #fff8f6;
+    --popover-foreground: #241913;
 
-    --secondary: 40 18% 96%; /* #F5F4F0 Surface-2 */
-    --secondary-foreground: 24 10% 10%; /* #1C1917 */
+    --primary: #c95e0a; /* Burned-Orange */
+    --primary-foreground: #fff8f6; /* Warm-White */
+    --primary-container: #be5600;
+    --primary-fixed: #ffdbc9;
 
-    --muted: 40 18% 96%; /* #F5F4F0 Surface-2 */
-    --muted-foreground: 25 6% 39%; /* #6B6560 Text Secondary */
+    --secondary: #e0e0dc; /* Pastel Sand */
+    --secondary-foreground: #241913;
+    --secondary-container: #e0e0dc;
+    --secondary-fixed: #e3e2df;
 
-    --accent: 25 100% 96%; /* #FFF4EC Accent BG */
-    --accent-foreground: 26 91% 41%; /* #C95E0A */
+    --muted: #f3ded5;
+    --muted-foreground: #574238;
 
-    --destructive: 0 74% 42%; /* #B91C1C Red */
-    --destructive-foreground: 60 20% 98%; /* Warm White */
+    --accent: #ffb68d;
+    --accent-foreground: #241913;
 
-    --border: 24 10% 10%; /* Thick high-contrast dark border for Neobrutalism */
-    --input: 24 10% 10%;
-    --ring: 26 91% 41%; /* #C95E0A Accent */
+    --destructive: #ba1a1a;
+    --destructive-foreground: #ffffff;
 
-    --radius: 0px; /* Neobrutalism looks spectacular with sharp 0px or rigid corners */
+    --border: #1c1917; /* Ink-Black */
+    --input: #fff8f6;
+    --ring: #c95e0a;
   }
 
   .dark {
-    --background: 24 10% 10%;
-    --foreground: 60 20% 98%;
+    /* For Neobrutalism, "dark" can be inverted or kept brutal. Here we define basic inversions based on tokens */
+    --background: #241913;
+    --foreground: #fff8f6;
 
-    --card: 24 10% 12%;
-    --card-foreground: 60 20% 98%;
+    --surface: #241913;
+    --surface-dim: #3a2e27;
+    --surface-bright: #3a2e27;
 
-    --popover: 24 10% 12%;
-    --popover-foreground: 60 20% 98%;
+    --surface-container-lowest: #1c1917;
+    --surface-container-low: #241913;
+    --surface-container: #3a2e27;
+    --surface-container-high: #574238;
+    --surface-container-highest: #8a7266;
 
-    --primary: 26 91% 41%;
-    --primary-foreground: 60 20% 98%;
+    --card: #3a2e27;
+    --card-foreground: #fff8f6;
 
-    --secondary: 24 10% 16%;
-    --secondary-foreground: 60 20% 98%;
+    --popover: #241913;
+    --popover-foreground: #fff8f6;
 
-    --muted: 24 10% 16%;
-    --muted-foreground: 25 6% 60%;
+    --primary: #c95e0a;
+    --primary-foreground: #fff8f6;
+    --primary-container: #be5600;
+    --primary-fixed: #ffdbc9;
 
-    --accent: 24 10% 16%;
-    --accent-foreground: 60 20% 98%;
+    --secondary: #5e5f5c;
+    --secondary-foreground: #ffffff;
+    --secondary-container: #626360;
+    --secondary-fixed: #c7c7c3;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 60 20% 98%;
+    --muted: #3a2e27;
+    --muted-foreground: #dec1b2;
 
-    --border: 60 20% 98%; /* High contrast light border in dark mode */
-    --input: 60 20% 98%;
-    --ring: 26 91% 41%;
+    --accent: #9b4500;
+    --accent-foreground: #fff8f6;
+
+    --destructive: #ffdad6;
+    --destructive-foreground: #93000a;
+
+    --border: #fff8f6;
+    --input: #241913;
+    --ring: #c95e0a;
   }
 }
 
@@ -73,46 +100,29 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
 }
 
 @layer utilities {
-  .neo-shadow {
-    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
-  }
-  .neo-shadow-sm {
-    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
-  }
-  .neo-shadow-lg {
-    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
-  }
-  .neo-shadow-primary {
-    box-shadow: 4px 4px 0px 0px hsl(var(--primary));
-  }
-  .dark .neo-shadow {
-    box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.25);
-  }
-  .dark .neo-shadow-sm {
-    box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 0.25);
-  }
-  .dark .neo-shadow-lg {
-    box-shadow: 6px 6px 0px 0px rgba(255, 255, 255, 0.25);
-  }
-  .dark .neo-shadow-primary {
-    box-shadow: 4px 4px 0px 0px hsl(var(--primary));
-  }
-
-  /* Tactile Neobrutalism Interactive effects */
   .neo-interactive {
-    @apply transition-all duration-150;
+    @apply transition-transform duration-150;
   }
   .neo-interactive:hover {
-    @apply -translate-x-[2px] -translate-y-[2px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
-  }
-  .dark .neo-interactive:hover {
-    @apply -translate-x-[2px] -translate-y-[2px] shadow-[6px_6px_0px_0px_rgba(255,255,255,0.25)];
+    @apply -translate-x-[2px] -translate-y-[2px] shadow-neo-hover;
   }
   .neo-interactive:active {
-    @apply translate-x-[2px] translate-y-[2px] shadow-none;
+    @apply translate-x-[4px] translate-y-[4px] shadow-none;
+  }
+  .neo-shadow {
+    @apply shadow-neo;
+  }
+  .neo-shadow-sm {
+    @apply shadow-neo-sm;
+  }
+  .neo-shadow-lg {
+    @apply shadow-neo-hover;
   }
 }
 
