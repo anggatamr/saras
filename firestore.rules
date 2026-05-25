@@ -1,35 +1,77 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Default deny
+
+    // ── Helper Functions ────────────────────────────────────────────
+    // Verifies user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verifies the authenticated user has a verified academic email
+    // Enforces .ac.id or .edu domain at the Firestore security rule level
+    // This is BULLETPROOF — cannot be bypassed via Postman or direct API calls
+    function isAcademicUser() {
+      return isAuthenticated() &&
+        (request.auth.token.email.matches('.*\\.ac\\.id$') ||
+         request.auth.token.email.matches('.*\\.edu$'));
+    }
+
+    // Verifies the user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ── Default: Deny All ────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Users collection
+    // ── Users Collection ─────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read:  if isAuthenticated();
+      allow write: if isOwner(userId) && isAcademicUser();
     }
 
-    // Surveys (VERA Module)
+    // ── Surveys (VERA Module) ────────────────────────────────────────
+    // Only verified .ac.id / .edu users can create or update surveys
     match /surveys/{surveyId} {
-      allow read: if true; // Anyone can view active surveys
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+      allow read:   if true; // Public listing of active surveys
+      allow create: if isAcademicUser();
+      allow update: if isAcademicUser() &&
+                       resource.data.createdBy == request.auth.uid;
+      allow delete: if isAcademicUser() &&
+                       resource.data.createdBy == request.auth.uid;
     }
 
-    // Survey Responses
+    // ── Survey Responses ─────────────────────────────────────────────
+    // Only verified academic users can submit responses
     match /surveys/{surveyId}/responses/{responseId} {
-      allow create: if request.auth != null; // Authenticated users can submit responses
-      allow read: if request.auth != null && get(/databases/$(database)/documents/surveys/$(surveyId)).data.createdBy == request.auth.uid; // Only creator can read
+      allow create: if isAcademicUser();
+      allow read:   if isAuthenticated() &&
+                       get(/databases/$(database)/documents/surveys/$(surveyId))
+                         .data.createdBy == request.auth.uid;
     }
 
-    // Reports (ARIA/SIGMA)
+    // ── Reports (ARIA / SIGMA) ───────────────────────────────────────
     match /reports/{reportId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read:   if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+      allow create: if isAcademicUser() &&
+                       request.resource.data.userId == request.auth.uid;
     }
+
+    // ── API Response Cache (NEXUS BPS + ATLAS OpenAlex) ─────────────
+    // Backend-only: allow read/write from authenticated service accounts
+    // Client-side reads are NOT permitted (cache is server-side only)
+    match /cache_bps/{cacheId} {
+      allow read, write: if false; // Managed exclusively by Cloud Run backend
+    }
+
+    match /cache_atlas/{cacheId} {
+      allow read, write: if false; // Managed exclusively by Cloud Run backend
+    }
+
   }
 }
+

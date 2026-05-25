@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Library, Search, BookOpen, Quote, Download, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { fetchWithAuth } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
 
 interface Paper {
   id: string
@@ -25,6 +26,7 @@ interface Bubble {
 }
 
 export default function AtlasPage() {
+  const { toast } = useToast()
   const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -56,6 +58,11 @@ export default function AtlasPage() {
       setSearched(true)
     } catch (error) {
       console.error("ATLAS Search failed", error)
+      toast({
+        type: 'error',
+        title: 'Pencarian Gagal',
+        description: 'Gagal mencari literatur ilmiah dari OpenAlex.'
+      })
     } finally {
       setLoading(false)
     }
@@ -72,10 +79,19 @@ export default function AtlasPage() {
       if (res.ok) {
         const data = await res.json()
         navigator.clipboard.writeText(data.citation)
-        alert("Kutipan disalin ke clipboard!\n\n" + data.citation)
+        toast({
+          type: 'success',
+          title: 'Kutipan Disalin!',
+          description: data.citation
+        })
       }
     } catch (error) {
       console.error("Citation failed", error)
+      toast({
+        type: 'error',
+        title: 'Gagal Mengutip',
+        description: 'Terjadi kesalahan saat memproses kutipan sitasi.'
+      })
     }
   }
 

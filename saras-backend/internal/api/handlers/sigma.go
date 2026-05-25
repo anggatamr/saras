@@ -223,13 +223,13 @@ Instruksi Penulisan:
    - Interpretasi hasil Uji t secara parsial untuk masing-masing variabel independen X (bagaimana arah pengaruh positif/negatif, dan signifikansinya).
 4. Jangan gunakan bullet-point. Tulis dalam bentuk beberapa paragraf naratif akademis yang padat dan komprehensif.`
 
-	narrative, err := h.geminiClient.GenerateNarrative(c.Request.Context(), prompt)
+	output, err := h.geminiClient.GenerateStructuredNarrative(c.Request.Context(), prompt)
 	if err != nil {
-		h.logger.Error("Failed to generate narrative", zap.Error(err))
+		h.logger.Error("Failed to generate structured narrative", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate narrative"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"narrative": narrative})
+	c.JSON(http.StatusOK, output)
 }
 

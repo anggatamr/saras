@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { fetchWithAuth } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
 
 interface VariableResult {
   name: string
@@ -29,6 +30,7 @@ interface RegressionResult {
 }
 
 export default function SigmaPage() {
+  const { toast } = useToast()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [showTechnical, setShowTechnical] = useState(true)
@@ -42,9 +44,13 @@ export default function SigmaPage() {
   const [yColumn, setYColumn] = useState("")
   const [xColumns, setXColumns] = useState<string[]>([])
   
-  // Results
   const [regressionResult, setRegressionResult] = useState<RegressionResult | null>(null)
-  const [aiNarrative, setAiNarrative] = useState("")
+  const [aiNarrative, setAiNarrative] = useState<string | {
+    status_integritas: string
+    paragraf_pembuka: string
+    analisis_statistik: string
+    kesimpulan_akademis: string
+  }>("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -58,7 +64,11 @@ export default function SigmaPage() {
       const text = await file.text()
       const lines = text.split("\n").map(l => l.trim()).filter(Boolean)
       if (lines.length < 2) {
-        alert("File CSV tidak valid atau kosong.")
+        toast({
+          type: 'error',
+          title: 'File Tidak Valid',
+          description: 'File CSV tidak valid atau kosong.'
+        })
         setLoading(false)
         return
       }
@@ -86,7 +96,11 @@ export default function SigmaPage() {
       })
 
       if (numericCols.length < 2) {
-        alert("Gagal: Harus ada minimal 2 kolom numerik untuk analisis regresi.")
+        toast({
+          type: 'error',
+          title: 'Kolom Numerik Kurang',
+          description: 'Harus ada minimal 2 kolom numerik untuk analisis regresi.'
+        })
         setLoading(false)
         return
       }
@@ -118,7 +132,11 @@ export default function SigmaPage() {
       setStep(2)
     } catch (err) {
       console.error(err)
-      alert("Gagal membaca atau mem-parsing file CSV.")
+      toast({
+        type: 'error',
+        title: 'Pembacaan Gagal',
+        description: 'Gagal membaca atau mem-parsing file CSV.'
+      })
     } finally {
       setLoading(false)
     }
@@ -134,15 +152,27 @@ export default function SigmaPage() {
 
   const handleRunRegression = async () => {
     if (!yColumn) {
-      alert("Silakan pilih Variabel Dependen (Y).")
+      toast({
+        type: 'warning',
+        title: 'Variabel Y Kosong',
+        description: 'Silakan pilih Variabel Dependen (Y).'
+      })
       return
     }
     if (xColumns.length === 0) {
-      alert("Silakan pilih minimal satu Variabel Independen (X).")
+      toast({
+        type: 'warning',
+        title: 'Variabel X Kosong',
+        description: 'Silakan pilih minimal satu Variabel Independen (X).'
+      })
       return
     }
     if (xColumns.includes(yColumn)) {
-      alert("Variabel Dependen (Y) tidak boleh dipilih sebagai Variabel Independen (X).")
+      toast({
+        type: 'warning',
+        title: 'Variabel Tumpang Tindih',
+        description: 'Variabel Dependen (Y) tidak boleh dipilih sebagai Variabel Independen (X).'
+      })
       return
     }
 
@@ -182,7 +212,7 @@ export default function SigmaPage() {
 
       if (narrativeRes.ok) {
         const narrativeResult = await narrativeRes.json()
-        setAiNarrative(narrativeResult.narrative)
+        setAiNarrative(narrativeResult)
       } else {
         setAiNarrative("Gagal menjabarkan narasi skripsi secara otomatis. Detail nilai statistik tersedia di bawah.")
       }
@@ -191,7 +221,11 @@ export default function SigmaPage() {
     } catch (err) {
       console.error(err)
       const errMsg = err instanceof Error ? err.message : "Gagal melakukan kalkulasi statistik regresi."
-      alert(errMsg)
+      toast({
+        type: 'error',
+        title: 'Kalkulasi Gagal',
+        description: errMsg
+      })
     } finally {
       setLoading(false)
     }
@@ -199,8 +233,18 @@ export default function SigmaPage() {
 
   const copyToClipboard = () => {
     if (!aiNarrative) return
-    navigator.clipboard.writeText(aiNarrative)
-    alert("Narasi akademis berhasil disalin ke clipboard!")
+    let textToCopy = ""
+    if (typeof aiNarrative === 'object') {
+      textToCopy = `Kelayakan Model: ${aiNarrative.status_integritas}\n\nPengantar: ${aiNarrative.paragraf_pembuka}\n\nAnalisis Koefisien: ${aiNarrative.analisis_statistik}\n\nKesimpulan Akademik: ${aiNarrative.kesimpulan_akademis}`
+    } else {
+      textToCopy = aiNarrative
+    }
+    navigator.clipboard.writeText(textToCopy)
+    toast({
+      type: 'success',
+      title: 'Disalin!',
+      description: 'Narasi akademis berhasil disalin ke clipboard!'
+    })
   }
 
   return (
@@ -391,8 +435,31 @@ export default function SigmaPage() {
                     {loading ? (
                       <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-foreground"/></div>
                     ) : (
-                      <div className="space-y-4 text-xs font-bold leading-relaxed text-foreground/90 whitespace-pre-line mt-4">
-                        {aiNarrative}
+                      <div>
+                        {typeof aiNarrative === 'object' ? (
+                          <div className="space-y-4 text-xs font-bold leading-relaxed text-foreground/90 mt-4">
+                            <div className="border-2 border-foreground p-3 bg-purple-100 neo-shadow-sm rounded-none">
+                              <span className="font-black text-[10px] uppercase tracking-wider block text-purple-900">Kelayakan Model / Signifikansi Simultan</span>
+                              <p className="text-sm font-bold text-foreground mt-1">{aiNarrative.status_integritas}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-[10px] uppercase tracking-wider block text-muted-foreground">Pengantar Regresi</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/95">{aiNarrative.paragraf_pembuka}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-[10px] uppercase tracking-wider block text-muted-foreground">Analisis Koefisien Regresi & Uji t</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/95">{aiNarrative.analisis_statistik}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-[10px] uppercase tracking-wider block text-muted-foreground">Kesimpulan Akademik & Rekomendasi</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/95">{aiNarrative.kesimpulan_akademis}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 text-sm font-medium leading-relaxed text-foreground/90 whitespace-pre-line mt-4">
+                            {aiNarrative}
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>

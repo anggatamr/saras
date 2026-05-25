@@ -1,30 +1,32 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/angga/saras-backend/internal/bps"
+	"github.com/angga/saras-backend/internal/cache"
 	"go.uber.org/zap"
 )
 
 type NEXUSHandler struct {
-	logger *zap.Logger
+	logger    *zap.Logger
 	bpsClient *bps.Client
+	cache     *cache.FirestoreCache
 }
 
 func NewNEXUSHandler(logger *zap.Logger) *NEXUSHandler {
 	return &NEXUSHandler{
-		logger: logger,
+		logger:    logger,
 		bpsClient: bps.NewClient(),
+		cache:     cache.NewFirestoreCache(),
 	}
 }
 
 func (h *NEXUSHandler) GetIndicators(c *gin.Context) {
-	// Typically, we would fetch from BPS list/var endpoint
-	// For demo/prototype, return a standard list of indicators
 	indicators := []map[string]interface{}{
 		{"id": "tpt", "name": "Tingkat Pengangguran Terbuka (TPT)", "var_id": "1"},
 		{"id": "ipm", "name": "Indeks Pembangunan Manusia (IPM)", "var_id": "2"},
@@ -43,7 +45,6 @@ func (h *NEXUSHandler) GetProvinceData(c *gin.Context) {
 	
 	domainCode := bps.ResolveProvinceCode(provinceName)
 	
-	// Example mapping of generic indicator "IPM" to BPS varID
 	indicatorID := c.Query("indicator")
 	if indicatorID == "" {
 		indicatorID = "ipm"
@@ -51,10 +52,29 @@ func (h *NEXUSHandler) GetProvinceData(c *gin.Context) {
 	
 	varID := "73" // Example BPS varID for IPM
 
-	data, err := h.bpsClient.FetchData(domainCode, varID)
-	if err != nil {
+	// Caching logic
+	cacheKey := cache.HashKey(fmt.Sprintf("%s-%s", domainCode, varID))
+	var data []bps.BPSData
+	cachedBytes, foundCache := h.cache.Get(c.Request.Context(), "cache_bps", cacheKey)
+	if foundCache {
+		if err := json.Unmarshal(cachedBytes, &data); err != nil {
+			h.logger.Warn("Failed to unmarshal cached BPS data, refetching", zap.Error(err))
+			foundCache = false
+		}
+	}
+
+	var err error
+	if !foundCache {
+		data, err = h.bpsClient.FetchData(domainCode, varID)
+		if err == nil {
+			if cacheErr := h.cache.Set(c.Request.Context(), "cache_bps", cacheKey, data); cacheErr != nil {
+				h.logger.Warn("Failed to cache BPS data", zap.Error(cacheErr))
+			}
+		}
+	}
+
+	if err != nil && !foundCache {
 		h.logger.Warn("BPS API failed, using cached fallback", zap.Error(err))
-		// Graceful Degradation: return cached mock if API fails or key is invalid
 		data = []bps.BPSData{{Val: 72.14, Tahun: 2024}}
 	}
 
@@ -81,31 +101,45 @@ func (h *NEXUSHandler) CompareWithBPS(c *gin.Context) {
 
 	domainCode := bps.ResolveProvinceCode(req.Province)
 	
-	// Mock var ID mapping
 	varID := "1"
 	if req.Indicator == "Indeks Pembangunan Manusia (IPM)" {
 		varID = "73"
 	}
 	
-	data, err := h.bpsClient.FetchData(domainCode, varID)
+	// Caching logic
+	cacheKey := cache.HashKey(fmt.Sprintf("%s-%s", domainCode, varID))
+	var data []bps.BPSData
+	cachedBytes, foundCache := h.cache.Get(c.Request.Context(), "cache_bps", cacheKey)
+	if foundCache {
+		if err := json.Unmarshal(cachedBytes, &data); err != nil {
+			h.logger.Warn("Failed to unmarshal cached BPS data, refetching", zap.Error(err))
+			foundCache = false
+		}
+	}
+
+	var err error
+	if !foundCache {
+		data, err = h.bpsClient.FetchData(domainCode, varID)
+		if err == nil {
+			if cacheErr := h.cache.Set(c.Request.Context(), "cache_bps", cacheKey, data); cacheErr != nil {
+				h.logger.Warn("Failed to cache BPS data", zap.Error(cacheErr))
+			}
+		}
+	}
 	
 	// Find data for the specific year
 	var bpsVal float64 = 0
 	found := false
-	if err == nil {
-		for _, d := range data {
-			if d.Tahun == req.Year {
-				bpsVal = d.Val
-				found = true
-				break
-			}
+	for _, d := range data {
+		if d.Tahun == req.Year {
+			bpsVal = d.Val
+			found = true
+			break
 		}
 	}
 
-	// Graceful Degradation / Mock logic for competition if BPS API key is missing or data not found
 	if !found || err != nil {
 		h.logger.Warn("Using fallback comparison data")
-		// Simulate different results based on the indicator for the demo
 		if req.Indicator == "Tingkat Kemiskinan" {
 			bpsVal = 8.15
 		} else if req.Indicator == "Tingkat Pengangguran Terbuka (TPT)" {
@@ -113,7 +147,7 @@ func (h *NEXUSHandler) CompareWithBPS(c *gin.Context) {
 		} else if req.Indicator == "Indeks Pembangunan Manusia (IPM)" {
 			bpsVal = 75.13
 		} else {
-			bpsVal = req.UserValue + 1.2 // Just to show a diff
+			bpsVal = req.UserValue + 1.2
 		}
 	}
 

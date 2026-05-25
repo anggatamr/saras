@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { fetchWithAuth } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api"
 
 interface BpsComparison {
@@ -42,6 +43,7 @@ const provinceCoordinates: Record<string, { lat: number, lng: number }> = {
 };
 
 export default function NexusPage() {
+  const { toast } = useToast()
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
@@ -97,6 +99,11 @@ export default function NexusPage() {
       setData(results)
     } catch (error) {
       console.error("Failed to fetch BPS comparison", error)
+      toast({
+        type: 'error',
+        title: 'Gagal Sinkronisasi BPS',
+        description: 'Terjadi kesalahan saat membandingkan data dengan pangkalan data BPS.'
+      })
     } finally {
       setLoading(false)
     }
@@ -289,7 +296,11 @@ export default function NexusPage() {
                     className="border-2 border-green-400 text-green-400 hover:bg-green-400/20 px-3 py-2 rounded-none transition-all shrink-0 bg-transparent"
                     onClick={() => {
                       navigator.clipboard.writeText(data[showCitation].citation);
-                      alert("Kutipan disalin ke clipboard!");
+                      toast({
+                        type: 'success',
+                        title: 'Kutipan Disalin!',
+                        description: 'Sitasi format APA berhasil disalin ke clipboard.'
+                      });
                     }}
                   >
                     <Copy className="w-4 h-4" />

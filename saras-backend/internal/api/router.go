@@ -1,20 +1,28 @@
 package api
 
 import (
-    "github.com/gin-gonic/gin"
-    "github.com/angga/saras-backend/internal/api/handlers"
-    "github.com/angga/saras-backend/internal/api/middleware"
-    "github.com/angga/saras-backend/internal/database"
-    "github.com/angga/saras-backend/internal/gemini"
-    "go.uber.org/zap"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/angga/saras-backend/internal/api/handlers"
+	"github.com/angga/saras-backend/internal/api/middleware"
+	"github.com/angga/saras-backend/internal/database"
+	"github.com/angga/saras-backend/internal/gemini"
+	"go.uber.org/zap"
 )
 
 func NewRouter(logger *zap.Logger) *gin.Engine {
-    r := gin.New()
-    r.Use(gin.Recovery())
-    r.Use(middleware.RequestID())
-    r.Use(middleware.Logger(logger))
-    r.Use(middleware.CORS())
+	r := gin.New()
+	r.MaxMultipartMemory = 52 << 20 // 52 MB max multipart
+	r.Use(gin.Recovery())
+	r.Use(middleware.RequestID())
+	r.Use(middleware.Logger(logger))
+	r.Use(middleware.CORS())
+	// Global middleware: cap JSON/form body reads at 52 MB to prevent abuse
+	r.Use(func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 52<<20)
+		c.Next()
+	})
 
     // Initialize Gemini Client
     gc, err := gemini.NewClient()

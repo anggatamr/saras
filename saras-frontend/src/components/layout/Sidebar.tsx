@@ -10,7 +10,8 @@ import {
   Users, 
   BarChart3, 
   Library, 
-  Server
+  Server,
+  User
 } from "lucide-react"
 
 const mainNav = [
@@ -111,6 +112,22 @@ export function Sidebar() {
               </Link>
             )
           })}
+        </nav>
+
+        <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">ACCOUNT</div>
+        <nav className="grid gap-1 px-2">
+          <Link
+            href="/profile"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
+              pathname === "/profile"
+                ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm"
+                : "text-foreground hover:bg-accent hover:border-foreground"
+            )}
+          >
+            <User className="h-4 w-4" />
+            Profil
+          </Link>
         </nav>
       </div>
 
@@ -229,6 +246,22 @@ export function MobileSidebar() {
                   </Link>
                 )
               })}
+            </nav>
+
+            <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">ACCOUNT</div>
+            <nav className="grid gap-1 px-2">
+              <Link
+                href="/profile"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
+                  pathname === "/profile"
+                    ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm"
+                    : "text-foreground hover:bg-accent hover:border-foreground"
+                )}
+              >
+                <User className="h-4 w-4" />
+                Profil
+              </Link>
             </nav>
           </div>
 

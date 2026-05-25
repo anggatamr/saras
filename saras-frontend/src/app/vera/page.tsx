@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth"
 import { fetchWithAuth } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
 
 interface Survey {
   id: number
@@ -23,6 +24,7 @@ interface Survey {
 }
 
 export default function VeraPage() {
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("marketplace")
   const { user, isAcademicEmail, signInWithGoogle, logout, loading: authLoading } = useAuth()
   
@@ -86,14 +88,26 @@ export default function VeraPage() {
         setNewTarget("100")
         setNewPoints("30")
         setNewTags("Pendidikan, Penelitian")
-        alert("Sukses: Survei baru Anda berhasil dipublikasikan!")
+        toast({
+          type: 'success',
+          title: 'Survei Dipublikasikan!',
+          description: 'Survei baru Anda berhasil dipublikasikan ke platform VERA.'
+        })
         fetchSurveys()
       } else {
-        alert("Gagal memublikasikan survei.")
+        toast({
+          type: 'error',
+          title: 'Gagal Memublikasikan',
+          description: 'Gagal memublikasikan survei baru.'
+        })
       }
     } catch (err) {
       console.error(err)
-      alert("Error: Gagal terhubung ke server.")
+      toast({
+        type: 'error',
+        title: 'Koneksi Gagal',
+        description: 'Gagal terhubung ke server.'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -107,14 +121,26 @@ export default function VeraPage() {
       })
 
       if (res.ok) {
-        alert("Terima kasih! Anda mendapatkan poin tambahan karena mengisi survei akademik terverifikasi ini.")
+        toast({
+          type: 'success',
+          title: 'Partisipasi Berhasil!',
+          description: 'Terima kasih! Anda mendapatkan poin tambahan karena mengisi survei akademik terverifikasi ini.'
+        })
         fetchSurveys()
       } else {
-        alert("Gagal mengirim partisipasi.")
+        toast({
+          type: 'error',
+          title: 'Partisipasi Gagal',
+          description: 'Gagal mengirim partisipasi survei.'
+        })
       }
     } catch (e) {
       console.error(e)
-      alert("Gagal berpartisipasi dalam survei.")
+      toast({
+        type: 'error',
+        title: 'Error Partisipasi',
+        description: 'Gagal berpartisipasi dalam survei.'
+      })
     }
   }
 

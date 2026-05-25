@@ -8,7 +8,7 @@
 [![Build Status](https://github.com/anggatamr/Saras/actions/workflows/ci.yml/badge.svg)](https://github.com/anggatamr/Saras/actions)
 [![Deploy Backend](https://img.shields.io/badge/Backend-Cloud%20Run-4285F4?logo=google-cloud&logoColor=white)](https://saras-api-407575564976.asia-southeast2.run.app)
 [![Deploy Frontend](https://img.shields.io/badge/Frontend-Firebase-FFCA28?logo=firebase&logoColor=black)](https://saras-platform-73839.web.app)
-[![Go](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -53,10 +53,11 @@ SARAS unifies five critical research capabilities into a single, elegant interfa
 > *Upload CSV → 8 seconds → Integrity Score + Forensic Heatmap + AI Narrative*
 
 - **Z-Score Outlier Detection** — flags values >3σ from the mean
-- **Benford's Law Analysis** — detects unnatural digit distributions
+- **Benford's Law Analysis** — detects unnatural first-digit distributions
 - **Duplicate Row Detection** — catches double-entry errors
 - **Integrity Score (0–100)** — quantifiable data quality metric
-- **AI-Generated BAB IV Narrative** — academic Indonesian interpretation powered by Gemini
+- **AI-Generated BAB IV Narrative** — academic Indonesian interpretation powered by Gemini (Structured JSON Output)
+- **Powered by concurrent column-sharding analysis via Go Goroutines** — all columns analyzed in parallel for maximum speed
 
 ### 🌐 NEXUS — National Data Intelligence Hub
 > *Your data vs. official BPS statistics — compared automatically*
@@ -132,7 +133,7 @@ SARAS unifies five critical research capabilities into a single, elegant interfa
 |---|---|---|
 | **Frontend** | Next.js 14, TypeScript, Tailwind CSS | App Router, static export, type safety |
 | **UI Components** | shadcn/ui (Radix primitives) | Accessible, composable, beautiful |
-| **Backend** | Go 1.22, Gin Framework | 10× faster CSV processing than Python |
+| **Backend** | Go 1.25, Gin Framework | 10× faster CSV processing than Python via goroutine concurrency |
 | **AI Engine** | Gemini 1.5 Flash | Low-latency narrative generation |
 | **Database** | Firebase Firestore | Real-time sync, offline support |
 | **Auth** | Firebase Auth | Google Sign-In with `.ac.id` domain gating |
@@ -196,7 +197,7 @@ Saras/
 ### Prerequisites
 
 - [Node.js 18+](https://nodejs.org/) and npm
-- [Go 1.22+](https://go.dev/dl/)
+- [Go 1.25+](https://go.dev/dl/)
 - [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
 - [Firebase CLI](https://firebase.google.com/docs/cli) (`npm install -g firebase-tools`)
 
@@ -277,11 +278,13 @@ vercel --prod
 ### CI/CD
 
 Every push to `main` triggers the GitHub Actions pipeline (`.github/workflows/deploy.yml`) which automatically:
-1. Runs Go tests (backend)
-2. Builds the Docker image and pushes it to GCR
-3. Deploys the backend container to Google Cloud Run
-4. Builds the Next.js static site
-5. Deploys the frontend to Vercel (as the live production/alternate deployment)
+1. Runs Go unit tests (backend)
+2. Builds the Docker image and pushes it to Artifact Registry
+3. Deploys the backend container to **Google Cloud Run** (primary production backend)
+4. Builds the Next.js application (`output: standalone` for Cloud Run)
+5. Deploys the frontend to **Firebase Hosting** (primary production frontend — `https://saras-platform-73839.web.app`)
+
+> **Note on Vercel:** Any Vercel deployments serve as **preview/staging only** for PR code review. Firebase Hosting is the authoritative production target, maintaining full commitment to the Google Cloud ecosystem.
 
 ---
 

@@ -1,24 +1,28 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/angga/saras-backend/internal/openalex"
+	"github.com/angga/saras-backend/internal/cache"
 	"go.uber.org/zap"
 )
 
 type ATLASHandler struct {
 	logger      *zap.Logger
 	alexClient  *openalex.Client
+	cache       *cache.FirestoreCache
 }
 
 func NewATLASHandler(logger *zap.Logger) *ATLASHandler {
 	return &ATLASHandler{
 		logger:     logger,
 		alexClient: openalex.NewClient(),
+		cache:      cache.NewFirestoreCache(),
 	}
 }
 
@@ -67,8 +71,27 @@ func (h *ATLASHandler) SearchLiterature(c *gin.Context) {
 		return
 	}
 
-	works, err := h.alexClient.SearchWorks(query, 10)
-	if err != nil {
+	cacheKey := cache.HashKey(query)
+	var works []openalex.Work
+	cachedBytes, foundCache := h.cache.Get(c.Request.Context(), "cache_atlas", cacheKey)
+	if foundCache {
+		if err := json.Unmarshal(cachedBytes, &works); err != nil {
+			h.logger.Warn("Failed to unmarshal cached OpenAlex data, refetching", zap.Error(err))
+			foundCache = false
+		}
+	}
+
+	var err error
+	if !foundCache {
+		works, err = h.alexClient.SearchWorks(query, 10)
+		if err == nil {
+			if cacheErr := h.cache.Set(c.Request.Context(), "cache_atlas", cacheKey, works); cacheErr != nil {
+				h.logger.Warn("Failed to cache OpenAlex data", zap.Error(cacheErr))
+			}
+		}
+	}
+
+	if err != nil && !foundCache {
 		h.logger.Error("OpenAlex search failed", zap.Error(err))
 		// Fallback mock data for presentation
 		c.JSON(http.StatusOK, gin.H{"data": []Paper{

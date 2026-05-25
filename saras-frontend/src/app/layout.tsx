@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/lib/auth";
+import { ToastProvider, Toaster } from "@/components/ui/toast";
 
 export default function RootLayout({
   children,
@@ -21,13 +22,16 @@ export default function RootLayout({
     <html lang="id">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="flex h-screen w-full overflow-hidden pb-[64px] md:pb-0">
-            <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
-              {children}
+          <ToastProvider>
+            <div className="flex h-screen w-full overflow-hidden pb-[64px] md:pb-0">
+              <Sidebar />
+              <div className="flex flex-1 flex-col overflow-hidden">
+                {children}
+              </div>
+              <BottomNav />
             </div>
-            <BottomNav />
-          </div>
+            <Toaster />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

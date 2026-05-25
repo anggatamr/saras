@@ -8,8 +8,10 @@ import { UploadCloud, FileText, AlertTriangle, CheckCircle2, ShieldCheck } from 
 import { Badge } from "@/components/ui/badge"
 import confetti from "canvas-confetti"
 import { fetchWithAuth } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
 
 export default function AriaPage() {
+  const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,7 +32,11 @@ export default function AriaPage() {
       const lines = text.split("\n").filter(line => line.trim().length > 0)
       
       if (lines.length < 2) {
-        alert("Format CSV tidak valid.")
+        toast({
+          type: 'error',
+          title: 'Format Tidak Valid',
+          description: 'File CSV minimal harus memiliki 2 baris data.'
+        })
         setLoading(false)
         return
       }
@@ -109,7 +115,11 @@ export default function AriaPage() {
 
     } catch (error) {
       console.error(error)
-      alert("Gagal menganalisis file.")
+      toast({
+        type: 'error',
+        title: 'Analisis Gagal',
+        description: 'Terjadi kesalahan saat memproses file CSV.'
+      })
     } finally {
       setLoading(false)
     }
@@ -134,7 +144,7 @@ export default function AriaPage() {
       })
       if (!res.ok) throw new Error("Gagal generate narasi")
       const data = await res.json()
-      setResult({ ...result, ai_narrative: data.narrative })
+      setResult({ ...result, ai_narrative: data })
     } catch (error) {
       console.error(error)
       // Fallback narrative
@@ -149,8 +159,18 @@ export default function AriaPage() {
 
   const copyToClipboard = () => {
     if (result && result.ai_narrative) {
-      navigator.clipboard.writeText(result.ai_narrative)
-      alert("Teks disalin ke clipboard!")
+      let textToCopy = ""
+      if (typeof result.ai_narrative === 'object') {
+        textToCopy = `Status Integritas: ${result.ai_narrative.status_integritas}\n\nPengantar: ${result.ai_narrative.paragraf_pembuka}\n\nAnalisis: ${result.ai_narrative.analisis_statistik}\n\nKesimpulan: ${result.ai_narrative.kesimpulan_akademis}`
+      } else {
+        textToCopy = result.ai_narrative
+      }
+      navigator.clipboard.writeText(textToCopy)
+      toast({
+        type: 'success',
+        title: 'Disalin!',
+        description: 'Narasi AI berhasil disalin ke clipboard.'
+      })
     }
   }
 
@@ -261,11 +281,32 @@ export default function AriaPage() {
                   </CardHeader>
                   <CardContent className="pt-6 relative">
                     {result.ai_narrative ? (
-                      <div>
+                      <div className="space-y-4">
                         <div className="absolute top-0 right-0 border-2 border-foreground bg-amber-200 text-amber-900 font-black text-[9px] uppercase tracking-wider rotate-[-3deg] neo-shadow-sm px-2.5 py-1 rounded-none select-none z-10">
                           🤖 AI Generated
                         </div>
-                        <p className="text-sm font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap mt-4">{result.ai_narrative}</p>
+                        {typeof result.ai_narrative === 'object' ? (
+                          <div className="space-y-4 mt-6">
+                            <div className="border-2 border-foreground p-3 bg-purple-100 neo-shadow-sm rounded-none">
+                              <span className="font-black text-xs uppercase tracking-wider block text-purple-900">Status Integritas Akademik</span>
+                              <p className="text-sm font-bold text-foreground mt-1">{result.ai_narrative.status_integritas}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-xs uppercase tracking-wider block text-muted-foreground">Pengantar Interpretasi</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/90">{result.ai_narrative.paragraf_pembuka}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-xs uppercase tracking-wider block text-muted-foreground">Analisis Statistik</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/90">{result.ai_narrative.analisis_statistik}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="font-black text-xs uppercase tracking-wider block text-muted-foreground">Kesimpulan & Rekomendasi</span>
+                              <p className="text-sm font-medium leading-relaxed text-foreground/90">{result.ai_narrative.kesimpulan_akademis}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap mt-4">{result.ai_narrative}</p>
+                        )}
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
