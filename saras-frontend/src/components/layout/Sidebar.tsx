@@ -90,27 +90,31 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">DEV</div>
-        <nav className="grid gap-1 px-2">
-          {devNav.map((item) => {
-            const isActive = pathname.startsWith(item.href)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
-                  isActive 
-                    ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm" 
-                    : "text-foreground hover:bg-accent hover:border-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            )
-          })}
-        </nav>
+        {process.env.NODE_ENV !== "production" && (
+          <>
+            <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">DEV</div>
+            <nav className="grid gap-1 px-2">
+              {devNav.map((item) => {
+                const isActive = pathname.startsWith(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
+                      isActive 
+                        ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm" 
+                        : "text-foreground hover:bg-accent hover:border-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </nav>
+          </>
+        )}
 
         <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">ACCOUNT</div>
         <nav className="grid gap-1 px-2">
@@ -221,27 +225,31 @@ export function MobileSidebar() {
               })}
             </nav>
 
-            <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">DEV</div>
-            <nav className="grid gap-1 px-2">
-              {devNav.map((item) => {
-                const isActive = pathname.startsWith(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
-                      isActive 
-                        ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm" 
-                        : "text-foreground hover:bg-accent hover:border-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.name}
-                  </Link>
-                )
-              })}
-            </nav>
+            {process.env.NODE_ENV !== "production" && (
+              <>
+                <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">DEV</div>
+                <nav className="grid gap-1 px-2">
+                  {devNav.map((item) => {
+                    const isActive = pathname.startsWith(item.href)
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 text-sm font-bold transition-all rounded-none border-2 border-transparent",
+                          isActive 
+                            ? "bg-primary text-primary-foreground border-foreground neo-shadow-sm" 
+                            : "text-foreground hover:bg-accent hover:border-foreground"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </>
+            )}
 
             <div className="mt-6 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-foreground">ACCOUNT</div>
             <nav className="grid gap-1 px-2">
