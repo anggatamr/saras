@@ -60,12 +60,14 @@ SARAS unifies five critical research capabilities into a single, elegant interfa
 - **Powered by concurrent column-sharding analysis via Go Goroutines** — all columns analyzed in parallel for maximum speed
 
 ### 🌐 NEXUS — National Data Intelligence Hub
-> *Your data vs. official BPS statistics — compared automatically*
+> *Your data vs. official BPS statistics — compared automatically across all 34 provinces*
 
-- **BPS WebAPI Integration** — real-time access to Indonesia's national statistics
-- **Proactive Mismatch Alerts** — *"Your inflation figure differs 0.89% from BPS official data"*
-- **Auto-Citation Generator** — APA 7th format citations for BPS data, ready to paste
-- **24-Hour Cache Layer** — Firestore-backed caching to respect API limits
+- **BPS WebAPI Integration** — real-time access to Indonesia's national statistics.
+- **Nationwide Province Profiles** — full coordinate profiles and metadata covering all 34 Indonesian provinces.
+- **Dynamic Interactive Maps** — powered by an interactive OpenStreetMap (OSM) embed that automatically pans and drops marker pins on the selected province.
+- **Proactive Mismatch Alerts** — *"Your inflation figure differs 0.89% from BPS official data"*.
+- **Glassmorphism Backdrop-Blurred Overlay Dialog** — overlay modal displaying APA 7th format citations for BPS data, ready to copy and paste.
+- **24-Hour Cache Layer** — Firestore-backed caching to respect API limits.
 
 ### ✅ VERA — Verified Academic Respondent Ecosystem
 > *The first survey platform with academic identity verification*
@@ -78,10 +80,10 @@ SARAS unifies five critical research capabilities into a single, elegant interfa
 ### 📊 SIGMA — Statistical Intelligence Engine
 > *Upload data → SIGMA chooses the right test → runs it → writes the interpretation*
 
-- **Automated Test Selection** — decision tree from data type to the correct statistical test
-- **OLS Regression Engine** — coefficients, standard errors, t-values, p-values, significance stars
-- **Assumption Checking** — Shapiro-Wilk, Breusch-Pagan, Durbin-Watson, VIF — all automatic
-- **Narrative AI** — generates publication-ready BAB IV paragraphs with cited statistics
+- **Automated Test Selection** — decision tree from data type to the correct statistical test.
+- **Resilient OLS Regression Engine** — coefficients, standard errors, t-values, p-values, significance stars. Parses mixed datasets containing non-numeric columns (categories, respondent info, metadata) by parsing floats robustly at runtime.
+- **Assumption Checking** — Shapiro-Wilk, Breusch-Pagan, Durbin-Watson, VIF — all automatic.
+- **Narrative AI** — generates publication-ready BAB IV paragraphs with cited statistics.
 
 ### 🗺️ ATLAS — Academic Literature & Source Intelligence
 > *Type a topic → visualize the research landscape in 30 seconds*

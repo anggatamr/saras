@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Syne, Hanken_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Sidebar, BottomNav } from "@/components/layout/Sidebar";
 
-const syne = Syne({ 
+const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
-  variable: '--font-syne',
-});
-
-const hankenGrotesk = Hanken_Grotesk({
-  subsets: ["latin"],
-  variable: '--font-hanken-grotesk',
+  variable: '--font-plus-jakarta-sans',
 });
 
 export const metadata: Metadata = {
@@ -27,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${syne.variable} ${hankenGrotesk.variable}`}>
+    <html lang="id" className={`${plusJakartaSans.variable}`}>
       <body className={`font-sans antialiased`}>
         <AuthProvider>
           <ToastProvider>

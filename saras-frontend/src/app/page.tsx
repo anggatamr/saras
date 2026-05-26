@@ -190,6 +190,13 @@ export default function Home() {
             </div>
             <p className="text-[10px] font-bold text-muted-foreground">Otomatisasi uji hipotesis dan penulisan bab analisis ilmiah.</p>
           </div>
+          <div className="border-2 border-foreground p-3 bg-amber-100 rounded-none neo-shadow-sm col-span-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-black text-xs bg-amber-300 border border-foreground px-1.5 py-0.5">ATLAS</span>
+              <span className="font-bold text-xs text-foreground">Academic Literature Source</span>
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground">Pemetaan research gap visual dengan D3.js dan auto-cite APA/IEEE.</p>
+          </div>
         </div>
       )
     },

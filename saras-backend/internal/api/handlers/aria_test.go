@@ -32,7 +32,7 @@ func TestAnalyzeColumn(t *testing.T) {
 		if val := "Missing data detected in column 'TestCol'"; len(issue) >= len(val) && issue[:len(val)] == val {
 			foundMissing = true
 		}
-		if val := "Z-score outliers detected in column 'TestCol'"; len(issue) >= len(val) && issue[:len(val)] == val {
+		if val := "Pencilan Z-score terdeteksi pada kolom 'TestCol'"; len(issue) >= len(val) && issue[:len(val)] == val {
 			foundOutlier = true
 		}
 	}

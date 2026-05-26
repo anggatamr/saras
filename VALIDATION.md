@@ -32,5 +32,9 @@ We employ synthetic datasets containing known flaws to validate the ARIA module:
 - The `internal/gemini/scrubber.go` is tested using unit tests covering various formats of Indonesian phone numbers (`+62`, `08`, `628`), student ID numbers (NIMs of various university formats), and email addresses.
 - **Assertion:** The outgoing prompt string must contain strictly 0 instances of the injected PII before being dispatched to the Gemini endpoint.
 
+### 1.3 Mixed-Dataset Robustness Testing
+- **Methodology:** We test ingestion of CSV files containing both numeric variables and non-numeric variables (e.g., student IDs, string category descriptions, timestamps).
+- **Assertion:** The Go backend regression engine must successfully unmarshal requests into interface maps, skip non-numeric variables, convert valid numeric strings or numeric formats dynamically, and run regression computations without returning `Invalid request payload` or panicking.
+
 ---
-*Document Version: 1.0.0 (Prepared for JuaraGCP 2026 Assessment)*
+*Document Version: 1.1.0 (Prepared for JuaraGCP 2026 Assessment)*

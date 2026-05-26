@@ -9,6 +9,6 @@ gcloud builds submit --tag $IMAGE .
 
 Write-Host "Deploying to Cloud Run..."
 $SA_EMAIL = "saras-api-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-gcloud run deploy saras-api --image=$IMAGE --region=$REGION --service-account=$SA_EMAIL --allow-unauthenticated --min-instances=0 --memory=512Mi --set-env-vars="GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GIN_MODE=release" --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,BPS_API_KEY=bps-api-key:latest"
+gcloud run deploy saras-api --image=$IMAGE --region=$REGION --service-account=$SA_EMAIL --allow-unauthenticated --min-instances=0 --memory=512Mi --set-env-vars="GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GIN_MODE=release,GEMINI_API_KEY=AIzaSyAFb1ecPRhMWBHX851UIPV36yDp_O6S6IM,BPS_API_KEY=d2d8ee1c7697d2084e15dfb5e1580c58,SARAS_API_SECRET=saras-secret-handshake-token-9988,ALLOWED_EMAILS=anggatamara40@gmail.com"
 
 Write-Host "Deployment Complete!"

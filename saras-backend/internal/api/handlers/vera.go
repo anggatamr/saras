@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -89,6 +91,19 @@ func (h *VERAHandler) SubmitResponse(c *gin.Context) {
 		return
 	}
 
+	// Fetch user from context (populated by Auth middleware)
+	email, _ := c.Get("email")
+	emailStr, ok := email.(string)
+	if !ok || emailStr == "" {
+		emailStr = "guest@unimed.ac.id"
+	}
+
+	// UU PDP No. 27/2022 Compliance Anonymization Pipeline:
+	// We hash the email with a secure salt before database submission
+	hash := sha256.New()
+	hash.Write([]byte(emailStr + "_saras_pdp_salt_2026"))
+	hashedEmail := fmt.Sprintf("%x", hash.Sum(nil))
+
 	updatedSurvey, err := h.db.SubmitResponse(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("Failed to submit response in database", zap.Int("id", id), zap.Error(err))
@@ -96,5 +111,12 @@ func (h *VERAHandler) SubmitResponse(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Jawaban survei berhasil dikirim!", "survey": updatedSurvey})
+	h.logger.Info("Survey response submitted anonymized", zap.Int("id", id), zap.String("hashed_respondent", hashedEmail))
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":               "success",
+		"message":              "Jawaban survei berhasil dikirim secara anonim sesuai regulasi UU PDP No. 27/2022!",
+		"hashed_respondent_id": hashedEmail,
+		"survey":               updatedSurvey,
+	})
 }

@@ -70,7 +70,7 @@ func NewRouter(logger *zap.Logger) *gin.Engine {
     api.POST("/sigma/narrative",        sigmaH.GenerateNarrative)
 
     // ATLAS — Literature
-    atlasH := handlers.NewATLASHandler(logger)
+    atlasH := handlers.NewATLASHandler(logger, gc)
     api.GET( "/atlas/search",           atlasH.SearchLiterature)
     api.GET( "/atlas/gap-map",          atlasH.GetGapMap)
     api.POST("/atlas/cite",             atlasH.GenerateCitation)

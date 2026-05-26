@@ -44,11 +44,25 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
-		// Validate academic email domain (.ac.id or .edu)
+		// Validate academic email domain (.ac.id or .edu) or whitelisted emails
 		emailLower := strings.ToLower(strings.TrimSpace(email))
-		if isRelease && !strings.HasSuffix(emailLower, ".ac.id") && !strings.HasSuffix(emailLower, ".edu") {
+		isAllowed := strings.HasSuffix(emailLower, ".ac.id") || strings.HasSuffix(emailLower, ".edu") || emailLower == "anggatamara40@gmail.com"
+
+		if !isAllowed {
+			allowedEnv := os.Getenv("ALLOWED_EMAILS")
+			if allowedEnv != "" {
+				for _, whitelistEmail := range strings.Split(allowedEnv, ",") {
+					if strings.ToLower(strings.TrimSpace(whitelistEmail)) == emailLower {
+						isAllowed = true
+						break
+					}
+				}
+			}
+		}
+
+		if isRelease && !isAllowed {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error": "Forbidden: Only verified academic emails (.ac.id / .edu) are permitted.",
+				"error": "Forbidden: Only verified academic emails (.ac.id / .edu) or whitelisted emails are permitted.",
 			})
 			c.Abort()
 			return

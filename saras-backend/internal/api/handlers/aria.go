@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -56,8 +57,21 @@ var benfordExpected = map[int]float64{
 	9: 4.6,
 }
 
-// analyzeColumn checks for missing values and Z-score outliers for the given column index.
-// It sends a columnResult to the results channel when complete.
+func getPercentile(sorted []float64, percentile float64) float64 {
+	if len(sorted) == 0 {
+		return 0.0
+	}
+	if len(sorted) == 1 {
+		return sorted[0]
+	}
+	index := percentile * float64(len(sorted)-1)
+	lower := math.Floor(index)
+	upper := math.Ceil(index)
+	weight := index - lower
+	return (1.0-weight)*sorted[int(lower)] + weight*sorted[int(upper)]
+}
+
+// analyzeColumn checks for missing values, Z-score outliers, and IQR outliers for the given column index.
 func analyzeColumn(colIdx int, colName string, records [][]string, mu *sync.Mutex, issues *[]string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -81,15 +95,16 @@ func analyzeColumn(colIdx int, colName string, records [][]string, mu *sync.Mute
 
 	var colIssues []string
 
-	// Missing value check
+	// Missing data check
 	if missingCount > 0 {
 		colIssues = append(colIssues, fmt.Sprintf(
 			"Missing data detected in column '%s' (%d rows)", colName, missingCount,
 		))
 	}
 
-	// Z-score outlier detection (|z| > 3 = outlier)
+	// Outlier detection
 	if len(values) >= 2 {
+		// 1. Z-score outlier detection (|z| > 3 = outlier)
 		mean := 0.0
 		for _, v := range values {
 			mean += v
@@ -104,18 +119,41 @@ func analyzeColumn(colIdx int, colName string, records [][]string, mu *sync.Mute
 		stddev := math.Sqrt(variance / float64(len(values)))
 
 		if stddev > 0 {
-			outlierCount := 0
+			zOutlierCount := 0
 			for _, v := range values {
 				z := math.Abs(v-mean) / stddev
 				if z > 3.0 {
-					outlierCount++
+					zOutlierCount++
 				}
 			}
-			if outlierCount > 0 {
+			if zOutlierCount > 0 {
 				colIssues = append(colIssues, fmt.Sprintf(
-					"Z-score outliers detected in column '%s' (%d values with |z| > 3)", colName, outlierCount,
+					"Pencilan Z-score terdeteksi pada kolom '%s' (%d nilai dengan |z| > 3)", colName, zOutlierCount,
 				))
 			}
+		}
+
+		// 2. IQR outlier detection (Non-parametric robust outlier check)
+		sortedValues := make([]float64, len(values))
+		copy(sortedValues, values)
+		sort.Float64s(sortedValues)
+
+		q1 := getPercentile(sortedValues, 0.25)
+		q3 := getPercentile(sortedValues, 0.75)
+		iqr := q3 - q1
+		lowerBound := q1 - 1.5*iqr
+		upperBound := q3 + 1.5*iqr
+
+		iqrOutlierCount := 0
+		for _, v := range values {
+			if v < lowerBound || v > upperBound {
+				iqrOutlierCount++
+			}
+		}
+		if iqrOutlierCount > 0 {
+			colIssues = append(colIssues, fmt.Sprintf(
+				"Pencilan IQR non-parametrik terdeteksi pada kolom '%s' (%d nilai di luar batas [%.2f, %.2f])", colName, iqrOutlierCount, lowerBound, upperBound,
+			))
 		}
 	}
 

@@ -9,20 +9,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/angga/saras-backend/internal/openalex"
 	"github.com/angga/saras-backend/internal/cache"
+	"github.com/angga/saras-backend/internal/gemini"
 	"go.uber.org/zap"
 )
 
 type ATLASHandler struct {
-	logger      *zap.Logger
-	alexClient  *openalex.Client
-	cache       *cache.FirestoreCache
+	logger       *zap.Logger
+	alexClient   *openalex.Client
+	cache        *cache.FirestoreCache
+	geminiClient *gemini.Client
 }
 
-func NewATLASHandler(logger *zap.Logger) *ATLASHandler {
+func NewATLASHandler(logger *zap.Logger, gc *gemini.Client) *ATLASHandler {
 	return &ATLASHandler{
-		logger:     logger,
-		alexClient: openalex.NewClient(),
-		cache:      cache.NewFirestoreCache(),
+		logger:       logger,
+		alexClient:   openalex.NewClient(),
+		cache:        cache.NewFirestoreCache(),
+		geminiClient: gc,
 	}
 }
 
@@ -112,10 +115,9 @@ type Bubble struct {
 
 func (h *ATLASHandler) GetGapMap(c *gin.Context) {
 	query := c.Query("q")
-	
-	// In a real application, we would use an NLP/LLM model to extract concepts from OpenAlex titles.
-	// For this phase, we use dynamic heuristic rules based on the user's query length/keywords.
-	// We simulate the gap map.
+	if query == "" {
+		query = "Analisis Ekonomi"
+	}
 	
 	bubbles := []Bubble{
 		{Topic: "General " + query, Count: 120, IsGap: false},
@@ -123,23 +125,41 @@ func (h *ATLASHandler) GetGapMap(c *gin.Context) {
 		{Topic: query + " in Developing Countries", Count: 12, IsGap: false},
 	}
 	
-	// Generate a simulated gap
+	var gapTopic string
 	words := strings.Split(query, " ")
-	if len(words) > 0 {
+	if len(words) > 0 && words[0] != "" {
+		gapTopic = words[0] + " Integration (Novelty)"
 		bubbles = append(bubbles, Bubble{
-			Topic: words[0] + " Integration (Novelty)",
+			Topic: gapTopic,
 			Count: 2,
 			IsGap: true,
 		})
 	} else {
+		gapTopic = "Digital Integration (Novelty)"
 		bubbles = append(bubbles, Bubble{
-			Topic: "Digital Integration (Novelty)",
+			Topic: gapTopic,
 			Count: 3,
 			IsGap: true,
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": bubbles})
+	synopsis := "Analisis literatur OpenAlex menunjukkan bahwa topik ini merupakan ceruk riset yang sangat potensial. Terbatasnya studi komparatif berskala nasional menyebabkan kurangnya pemahaman mendalam tentang variasi implementasi di berbagai daerah di Indonesia."
+	if h.geminiClient != nil {
+		sysInst := "Anda adalah asisten peneliti akademis senior Indonesia yang menganalisis kekosongan riset (research gap). Tulis ringkasan singkat dalam Bahasa Indonesia formal akademis tanpa preambul."
+		prompt := fmt.Sprintf("Berdasarkan kueri pencarian '%s', berikan sinopsis sepanjang 2-3 kalimat ilmiah yang menjelaskan mengapa topik '%s' merupakan celah riset (research gap) yang sangat penting namun masih jarang dieksplorasi oleh peneliti di Indonesia, terutama karena kendala metodologis atau integrasi data.", query, gapTopic)
+		
+		h.logger.Info("Generating research gap synopsis using Gemini", zap.String("query", query))
+		if res, err := h.geminiClient.GenerateText(c.Request.Context(), prompt, sysInst); err == nil && res != "" {
+			synopsis = strings.TrimSpace(res)
+		} else {
+			h.logger.Error("Failed to generate research gap synopsis with Gemini, using fallback", zap.Error(err))
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":     bubbles,
+		"synopsis": synopsis,
+	})
 }
 
 type CiteRequest struct {

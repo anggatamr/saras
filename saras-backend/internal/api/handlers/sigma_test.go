@@ -26,7 +26,7 @@ func TestRunRegression_Success(t *testing.T) {
 	reqPayload := RegressionRequest{
 		YColumn:  "Y",
 		XColumns: []string{"X1", "X2"},
-		Data: []map[string]float64{
+		Data: []map[string]interface{}{
 			{"Y": 5.5, "X1": 1.0, "X2": 2.0},
 			{"Y": 9.0, "X1": 2.0, "X2": 4.0},
 			{"Y": 11.5, "X1": 3.0, "X2": 5.0},
@@ -92,7 +92,7 @@ func TestRunRegression_InsufficientData(t *testing.T) {
 	reqPayload := RegressionRequest{
 		YColumn:  "Y",
 		XColumns: []string{"X1", "X2"},
-		Data: []map[string]float64{
+		Data: []map[string]interface{}{
 			{"Y": 5.5, "X1": 1.0, "X2": 2.0},
 			{"Y": 9.0, "X1": 2.0, "X2": 4.0},
 		},

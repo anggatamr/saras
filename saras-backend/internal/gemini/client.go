@@ -89,6 +89,39 @@ func (c *Client) GenerateNarrative(ctx context.Context, prompt string) (string, 
 	return "", fmt.Errorf("empty response from Gemini")
 }
 
+func (c *Client) GenerateText(ctx context.Context, prompt string, systemInstruction string) (string, error) {
+	if c == nil || c.client == nil {
+		return "", fmt.Errorf("gemini client is uninitialized")
+	}
+	scrubbedPrompt := ScrubPII(prompt)
+	
+	config := &genai.GenerateContentConfig{
+		Temperature: genai.Ptr(float32(0.4)),
+		TopP:        genai.Ptr(float32(0.8)),
+	}
+	if systemInstruction != "" {
+		config.SystemInstruction = &genai.Content{
+			Parts: []*genai.Part{
+				{Text: systemInstruction},
+			},
+		}
+	}
+
+	resp, err := c.client.Models.GenerateContent(
+		ctx,
+		c.modelName,
+		genai.Text(scrubbedPrompt),
+		config,
+	)
+	if err != nil {
+		return "", fmt.Errorf("gemini generation error: %w", err)
+	}
+	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
+		return resp.Candidates[0].Content.Parts[0].Text, nil
+	}
+	return "", fmt.Errorf("empty response from Gemini")
+}
+
 func (c *Client) GenerateStructuredNarrative(ctx context.Context, prompt string) (NarrativeOutput, error) {
 	scrubbedPrompt := ScrubPII(prompt)
 	resp, err := c.client.Models.GenerateContent(
@@ -129,6 +162,80 @@ func (c *Client) GenerateStructuredNarrative(ctx context.Context, prompt string)
 	var output NarrativeOutput
 	if err := json.Unmarshal([]byte(rawText), &output); err != nil {
 		return NarrativeOutput{}, fmt.Errorf("failed to unmarshal structured narrative: %w, raw response: %s", err, rawText)
+	}
+
+	return output, nil
+}
+
+type RecommendationOutput struct {
+	Recommendation string   `json:"recommendation"`
+	Label          string   `json:"label"`
+	Reason         string   `json:"reason"`
+	YColumn        string   `json:"y_column"`
+	XColumns       []string `json:"x_columns"`
+	GroupColumn    string   `json:"group_column"`
+}
+
+func (c *Client) RecommendStatisticalTest(ctx context.Context, headers []string, numericHeaders []string, rowCount int) (RecommendationOutput, error) {
+	if c == nil || c.client == nil {
+		return RecommendationOutput{}, fmt.Errorf("gemini client is uninitialized")
+	}
+
+	prompt := fmt.Sprintf(`Analisis profil dataset berikut untuk merekomendasikan uji statistik yang tepat (antara 'regression' untuk Regresi Linier Berganda atau 'ttest' untuk Welch's Independent t-test):
+- Nama semua kolom: %v
+- Kolom bertipe numerik: %v
+- Jumlah baris data: %d
+
+Tugas Anda:
+1. Tentukan jenis analisis ('regression' atau 'ttest') yang paling cocok bagi mahasiswa/peneliti berdasarkan profil kolom. Jika ada minimal 2 kolom numerik, regresi biasanya lebih disukai. Jika ada kolom kategori/non-numerik dengan tepat/minimal 2 kelompok unik dan minimal 1 kolom numerik, ttest dapat disarankan.
+2. Berikan label bahasa Indonesia yang mewah (contoh: "Regresi Linear Berganda" atau "Welch's Independent Samples t-test").
+3. Berikan alasan akademis singkat tapi mendalam dalam bahasa Indonesia, menyitir ahli statistik terkenal (seperti Sugiyono atau Ghozali) secara ilmiah dan elegan.
+4. Pilih kolom dependen Y yang paling logis dari daftar kolom numerik.
+5. Jika jenisnya 'regression', pilih kolom independen X yang paling logis dari sisa kolom numerik.
+6. Jika jenisnya 'ttest', pilih kolom kelompok (group_column) dari daftar kolom non-numerik (kategori) untuk memisahkan 2 grup.
+
+Berikan output dalam format JSON sesuai struktur skema.`, headers, numericHeaders, rowCount)
+
+	sysInst := "Anda adalah pakar statistik senior dan asisten metodologi penelitian skripsi di Indonesia. Tugas Anda adalah memberikan rekomendasi uji statistik (regression vs ttest) secara dinamis, akurat, dan sangat ilmiah berdasarkan kolom-kolom dataset yang diberikan."
+
+	resp, err := c.client.Models.GenerateContent(
+		ctx,
+		c.modelName,
+		genai.Text(prompt),
+		&genai.GenerateContentConfig{
+			SystemInstruction: &genai.Content{
+				Parts: []*genai.Part{
+					{Text: sysInst},
+				},
+			},
+			Temperature:      genai.Ptr(float32(0.2)),
+			ResponseMIMEType: "application/json",
+			ResponseSchema: &genai.Schema{
+				Type: genai.TypeObject,
+				Properties: map[string]*genai.Schema{
+					"recommendation": {Type: genai.TypeString, Description: "Must be either 'regression' or 'ttest'"},
+					"label":          {Type: genai.TypeString, Description: "Indonesian user-friendly label of the test"},
+					"reason":         {Type: genai.TypeString, Description: "Academic markdown justification"},
+					"y_column":       {Type: genai.TypeString, Description: "Recommended dependent variable Y from numerical columns"},
+					"x_columns":      {Type: genai.TypeArray, Items: &genai.Schema{Type: genai.TypeString}, Description: "Recommended independent variables X for regression"},
+					"group_column":   {Type: genai.TypeString, Description: "Recommended categorical grouping column for t-test"},
+				},
+				Required: []string{"recommendation", "label", "reason", "y_column", "x_columns", "group_column"},
+			},
+		},
+	)
+	if err != nil {
+		return RecommendationOutput{}, fmt.Errorf("gemini recommend test generation error: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return RecommendationOutput{}, fmt.Errorf("empty response from Gemini")
+	}
+
+	rawText := resp.Candidates[0].Content.Parts[0].Text
+	var output RecommendationOutput
+	if err := json.Unmarshal([]byte(rawText), &output); err != nil {
+		return RecommendationOutput{}, fmt.Errorf("failed to unmarshal recommendation: %w, raw: %s", err, rawText)
 	}
 
 	return output, nil

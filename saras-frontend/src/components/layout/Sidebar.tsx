@@ -38,8 +38,8 @@ export function Sidebar() {
   const { user, signInWithGoogle, logout } = useAuth()
 
   return (
-    <div className="hidden h-full w-[240px] flex-col border-r-4 border-foreground bg-background md:flex">
-      <div className="flex h-14 items-center border-b-4 border-foreground px-4 bg-background">
+    <div className="hidden h-full w-[240px] flex-col border-r-2 border-foreground/20 bg-background md:flex">
+      <div className="flex h-14 items-center border-b-2 border-foreground/20 px-4 bg-background">
         <Link href="/">
           <SarasLogo iconSize="sm" textSize="md" />
         </Link>
@@ -133,7 +133,7 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto border-t-4 border-foreground p-4 bg-background">
+      <div className="mt-auto border-t-2 border-foreground/20 p-4 bg-background">
         {user ? (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3 overflow-hidden">
@@ -172,9 +172,9 @@ export function MobileSidebar() {
           <span className="sr-only">Toggle menu</span>
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[240px] p-0 border-r-4 border-foreground">
+      <SheetContent side="left" className="w-[240px] p-0 border-r-2 border-foreground/20">
         <div className="flex h-full flex-col bg-background">
-          <div className="flex h-14 items-center border-b-4 border-foreground px-4">
+          <div className="flex h-14 items-center border-b-2 border-foreground/20 px-4">
             <Link href="/">
               <SarasLogo iconSize="sm" textSize="md" />
             </Link>
@@ -268,7 +268,7 @@ export function MobileSidebar() {
             </nav>
           </div>
 
-          <div className="mt-auto border-t-4 border-foreground p-4 bg-background">
+          <div className="mt-auto border-t-2 border-foreground/20 p-4 bg-background">
             {user ? (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-3 overflow-hidden">
@@ -306,7 +306,7 @@ export function BottomNav() {
   ]
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t-4 border-foreground bg-background px-2 pb-safe">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t-2 border-foreground/20 bg-background px-2 pb-safe">
       {bottomNavItems.map((item) => {
         const isActive = (item.href === "/" ? pathname === item.href : pathname.startsWith(item.href))
         return (
